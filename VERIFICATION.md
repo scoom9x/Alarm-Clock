@@ -35,3 +35,13 @@ Selected Gemini explicitly with the newly supplied server-only key. Kept optiona
 Browser follow-up identified a Gemini timeout on an actual chat request, despite successful endpoint replays. Added one bounded retry for timeouts, connection failures, and HTTP 502/503/504. Each attempt has a 12-second deadline, within the client's 28-second timeout. Quota and credential failures are never retried. Two additional automated tests cover retry behavior and non-retryable errors.
 
 Final check: all 17 automated tests, production build, and iOS asset sync passed. In the actual browser, a fresh onboarding message received a personalized Gemini reply with no offline warning after timeout recovery was added. The saved profile was restored after the test.
+
+## Origin and conversational onboarding fix
+
+Removed the hardcoded browser-origin dependency: same-host requests work on the actual server port, and localhost / 127.0.0.1 / IPv6 loopback aliases are accepted on the same port. Explicitly configured origins remain supported; unrelated and opaque origins are still rejected.
+
+Onboarding now asks the AI whether an answer fits the current question. Off-topic questions are answered without advancing the setup or storing them as profile fields. Offline failures do not advance setup. A visible “Live Gemini reply” label appears only after a real provider response.
+
+All 20 automated tests and the production build pass. A live HTTP request with Origin http://127.0.0.1:5173 to localhost:5173 returned HTTP 200, source gemini, message “1+1 is 2!”, and advance false.
+
+Chrome verification: submitted “whats 1+1” in the actual UI. Gemini replied “It is 2, though I much prefer counting sheep while tucked in! What should I call you?” The UI displayed “Live Gemini reply,” remained at question 1/4, and showed no offline notice. Chrome was left open on this verified exchange.

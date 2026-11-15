@@ -7,6 +7,7 @@ import {
   validateInput,
   aiConfig,
   aiMiddleware,
+  isAllowedOrigin,
 } from "../server/ai.mjs";
 const input = {
   mode: "alarm",
@@ -333,4 +334,77 @@ test("quota and credential failures are never automatically retried", async () =
     assert.equal(calls, 1);
     assert.equal(result.source, "offline");
   }
+});
+
+test("the app origin works on the current host and port instead of only port 5173", () => {
+  assert.equal(
+    isAllowedOrigin("http://localhost:5174", "localhost:5174"),
+    true,
+  );
+  assert.equal(
+    isAllowedOrigin("http://127.0.0.1:5173", "localhost:5173"),
+    true,
+  );
+  assert.equal(isAllowedOrigin("http://[::1]:4173", "localhost:4173"), true);
+  assert.equal(isAllowedOrigin("https://clock.example", "clock.example"), true);
+  assert.equal(
+    isAllowedOrigin(
+      "capacitor://localhost",
+      "api.example",
+      "capacitor://localhost",
+    ),
+    true,
+  );
+  assert.equal(
+    isAllowedOrigin("https://unrelated.example", "localhost:5173"),
+    false,
+  );
+  assert.equal(isAllowedOrigin("null", "localhost:5173"), false);
+  assert.equal(
+    isAllowedOrigin("http://localhost:9999", "localhost:5173"),
+    false,
+  );
+});
+test("onboarding fallback never pretends an answer was accepted", () => {
+  const result = fallbackReply({
+    mode: "onboarding",
+    messages: [{ role: "user", text: "what is 1+1?" }],
+    nextQuestion: "What fills your days?",
+  });
+  assert.equal(result.advance, false);
+  assert.ok(!result.message.includes("What fills your days?"));
+});
+test("off-topic onboarding replies remain on the current question", async () => {
+  const result = await reply(
+    {
+      mode: "onboarding",
+      profile: {},
+      messages: [{ role: "user", text: "what is 1+1?" }],
+      currentQuestion: "What is your name?",
+      nextQuestion: "What fills your days?",
+    },
+    { AI_PROVIDER: "gemini", GEMINI_API_KEY: "test" },
+    async () => ({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: JSON.stringify({
+                    message: "1+1 is 2. What should I call you?",
+                    outcome: "continue",
+                    advance: false,
+                  }),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    }),
+  );
+  assert.equal(result.source, "gemini");
+  assert.equal(result.advance, false);
 });

@@ -26,6 +26,7 @@ type Reply = {
   outcome: "continue" | "awake" | "bed";
   source: "gemini" | "openrouter" | "offline";
   notice?: string;
+  advance?: boolean;
 };
 export type Task = {
   id: number;
@@ -65,8 +66,9 @@ function localFallback(
 ): Reply {
   const last = messages.filter((m) => m.role === "user").at(-1)?.text || "";
   let message =
-      nextQuestion ||
-      "Your pillow would like a word. What makes getting up worth it today?",
+      mode === "onboarding"
+        ? "I couldn’t connect to the AI. Please try your answer again."
+        : "Your pillow would like a word. What makes getting up worth it today?",
     outcome: Reply["outcome"] = "continue";
   if (mode === "alarm") {
     if (
@@ -108,6 +110,7 @@ export async function ask(
   profile: Profile,
   nextQuestion?: string,
   task?: string,
+  currentQuestion?: string,
 ): Promise<Reply> {
   const base =
     (import.meta as ImportMeta & { env: Record<string, string> }).env
@@ -128,6 +131,7 @@ export async function ask(
         profile,
         nextQuestion,
         task,
+        currentQuestion,
       }),
       signal: AbortSignal.timeout(28000),
     });
@@ -272,8 +276,28 @@ export function Onboarding({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
+  const [source, setSource] = useState("");
   async function send(text: string) {
     if (busy) return;
+    const next = [...messages, { role: "user" as const, text }];
+    setMessages(next);
+    setBusy(true);
+    setNotice("");
+    const response = await ask(
+      "onboarding",
+      next,
+      profile,
+      step === 3
+        ? "Setup is complete. Confirm their chosen personality and invite them to set an alarm."
+        : questions[step + 1],
+      undefined,
+      questions[step],
+    );
+    setMessages([...next, { role: "assistant", text: response.message }]);
+    setNotice(response.notice || "");
+    setSource(response.source);
+    setBusy(false);
+    if (response.source === "offline" || response.advance !== true) return;
     const p = {
       ...profile,
       [["name", "role", "responsibilities", "tone"][step]]: text,
@@ -285,26 +309,8 @@ export function Onboarding({
           ? "Dramatic"
           : "Cheeky";
     setProfile(p);
-    const next = [...messages, { role: "user" as const, text }];
-    setMessages(next);
-    setBusy(true);
-    if (step === 3) {
-      setMessages([
-        ...next,
-        {
-          role: "assistant",
-          text: `We’re set, ${characterName(p.name)}. I’ll keep it ${p.tone.toLowerCase()} and PG-13. Set an alarm, and we’ll debate your morning. May the best pillow win.`,
-        },
-      ]);
-      setReady(true);
-      setBusy(false);
-      return;
-    }
-    const reply = await ask("onboarding", next, p, questions[step + 1]);
-    setNotice(reply.notice || "");
-    setMessages([...next, { role: "assistant", text: reply.message }]);
-    setStep(step + 1);
-    setBusy(false);
+    if (step === 3) setReady(true);
+    else setStep(step + 1);
   }
   return (
     <main className="intro-screen">
@@ -338,7 +344,13 @@ export function Onboarding({
             <Avatar />
             <div>
               <strong>Duvet</strong>
-              <span>Your unproductivity sidekick</span>
+              <span>
+                {source === "gemini"
+                  ? "Live Gemini reply"
+                  : source === "openrouter"
+                    ? "Live OpenRouter reply"
+                    : "Your unproductivity sidekick"}
+              </span>
             </div>
             <span className="step-count">
               {ready ? "Ready" : `${step + 1} / 4`}

@@ -58,3 +58,5 @@ Profiles, tasks, and debate outcomes remain in local storage. Profile data and c
 The SvaraNova `frontend-ui` skill was installed and used for the React/plain-CSS design, shared tokens, semantic controls, visible labels, keyboard behavior, and responsive browser checks. See [SvaraNova/skills](https://github.com/SvaraNova/skills).
 
 If the AI says it is offline, check the displayed reason. Daily quota exhaustion requires waiting for the provider reset or changing the server-side model to one with available quota. Temporary rate limits, invalid credentials, filtered responses, and unreachable servers are reported separately. Automated tests use mocked responses and consume no provider quota.
+
+Onboarding is conversational: unrelated questions are answered before returning to setup, and only accepted answers advance it. A failed AI call keeps the current question. The origin guard accepts the current server host/port and same-port loopback aliases, so localhost, 127.0.0.1, and the preview server need not share a hardcoded port. Other cross-origin clients must be listed in `ALLOWED_ORIGINS`.
