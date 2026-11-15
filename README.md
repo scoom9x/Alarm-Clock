@@ -7,15 +7,15 @@ A React + TypeScript + Capacitor clock with Duvet, a PG-13 chatbot that makes a 
 ```sh
 npm install
 cp .env.example .env.local # skip if your private .env.local already exists
-# Set OPENROUTER_API_KEY in .env.local. Do not use a VITE_ prefix for the key.
+# Set GEMINI_API_KEY in .env.local. Do not use a VITE_ prefix for the key.
 npm run dev
 ```
 
-Open http://localhost:5173. The Vite server handles `/api/chat` and calls OpenRouter server-side. The key never enters the browser bundle. The supplied key is saved only in the ignored `.env.local` file. Default model: `openrouter/free` (free-model routing); override with `OPENROUTER_MODEL`.
+Open http://localhost:5173. The Vite server handles `/api/chat` and calls the selected AI provider server-side. The key never enters the browser bundle. The supplied key is saved only in the ignored `.env.local` file. Default provider: Gemini with `gemini-3.1-flash-lite`. Set `GEMINI_API_KEY` and optionally `GEMINI_MODEL`. Set `AI_PROVIDER=openrouter` with `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` to use OpenRouter instead. Provider selection is explicit; no unused key is sent.
 
 ```sh
 npm test
-npm run test:ai:live # one real OpenRouter request, consumes quota
+npm run test:ai:live # one real AI request, consumes quota
 # npm run test:ai:live -- --all # all five live scenarios, consumes five requests
 npm run build
 npm start # local production server at http://localhost:3001
@@ -25,13 +25,13 @@ For the production server, add its browser origin to `ALLOWED_ORIGINS`. The serv
 
 ## The experience
 
-- **Onboarding:** four conversational questions about name, daily role, responsibilities, and preferred personality. OpenRouter acknowledges answers and asks follow-ups. Profile editing is available in the header and Your day.
+- **Onboarding:** four conversational questions about name, daily role, responsibilities, and preferred personality. The AI acknowledges answers and asks follow-ups. Profile editing is available in the header and Your day.
 - **Alarm debate:** the alarm rings while you text Duvet. A reasonable argument to wake up, or explicitly choosing to go back to bed, ends the alarm. PG-13 instructions, structured responses, and output screening constrain the character. Generated content still needs evaluation; no model filter is an absolute guarantee.
 - **Make it worse:** each tap adds a different synthesized sound layer, up to eight. Overall gain is bounded. Accessibility mute and emergency stop stay available.
-- **Your day:** tasks with due dates, opt-in unproductivity reminders, and explicit Pending / Done / Neglected / Missed statuses. Reminder copy is generated when a task is created, then saved for scheduled delivery. No background OpenRouter connection is needed to deliver it. Browser reminders appear across app tabs while the page remains open.
+- **Your day:** tasks with due dates, opt-in unproductivity reminders, and explicit Pending / Done / Neglected / Missed statuses. Reminder copy is generated when a task is created, then saved for scheduled delivery. No background AI connection is needed to deliver it. Browser reminders appear across app tabs while the page remains open.
 - **Stats:** actual ringing duration, task statuses marked Neglected or Missed, and a history of alarm outcomes. Practice alarms are labeled and are included in history. Stats are saved on this device, not invented.
 - Existing world clocks, stopwatch/laps, timer, alarm editing, repeat days, and local persistence remain available.
-- **Offline character:** if OpenRouter times out, rejects credentials, or reaches its quota, the UI labels the offline fallback and still allows either conversation outcome. An internet failure cannot trap the user in a ringing alarm.
+- **Offline character:** if the AI provider times out, rejects credentials, or reaches its quota, the UI labels the offline fallback and still allows either conversation outcome. An internet failure cannot trap the user in a ringing alarm.
 
 ## iPhone
 
@@ -43,7 +43,7 @@ npm run ios
 
 Select your signing team and device in Xcode. The native project is already generated. The display name is **Alarm Clock**.
 
-For OpenRouter on a physical iPhone, deploy the Node API behind HTTPS, set `VITE_AI_BASE_URL` to that backend's origin in `.env.local`, add `capacitor://localhost` to the server's `ALLOWED_ORIGINS`, then rebuild and sync. Keep `OPENROUTER_API_KEY` on the server. Without a backend URL the installed app uses the labeled offline character. A server running only on your Mac's loopback address is not reachable from a physical iPhone.
+For live AI on a physical iPhone, deploy the Node API behind HTTPS, set `VITE_AI_BASE_URL` to that backend's origin in `.env.local`, add `capacitor://localhost` to the server's `ALLOWED_ORIGINS`, then rebuild and sync. Keep provider API keys on the server. Without a backend URL the installed app uses the labeled offline character. A server running only on your Mac's loopback address is not reachable from a physical iPhone.
 
 ### Timing and background limits
 
@@ -53,8 +53,8 @@ A browser must stay open to ring alarms or show task reminders. Timer completion
 
 ## Privacy and design
 
-Profiles, tasks, and debate outcomes remain in local storage. Profile data and chat text are sent to OpenRouter and its selected model provider only when requesting AI replies; task titles are sent when generating reminder copy. The Node API does not log or retain chats. Avoid entering private or sensitive details.
+Profiles, tasks, and debate outcomes remain in local storage. Profile data and chat text are sent to the selected AI provider only when requesting AI replies; task titles are sent when generating reminder copy. The Node API does not log or retain chats. Avoid entering private or sensitive details.
 
 The SvaraNova `frontend-ui` skill was installed and used for the React/plain-CSS design, shared tokens, semantic controls, visible labels, keyboard behavior, and responsive browser checks. See [SvaraNova/skills](https://github.com/SvaraNova/skills).
 
-If the AI says it is offline, check the displayed reason. Daily quota exhaustion requires waiting for the provider reset or changing the server-side model to one with available quota. Temporary rate limits, invalid credentials, filtered responses, and unreachable servers are reported separately. Automated tests use mocked responses and consume no OpenRouter quota.
+If the AI says it is offline, check the displayed reason. Daily quota exhaustion requires waiting for the provider reset or changing the server-side model to one with available quota. Temporary rate limits, invalid credentials, filtered responses, and unreachable servers are reported separately. Automated tests use mocked responses and consume no provider quota.

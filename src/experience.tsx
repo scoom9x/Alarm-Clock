@@ -24,7 +24,7 @@ type Message = { role: "user" | "assistant"; text: string };
 type Reply = {
   message: string;
   outcome: "continue" | "awake" | "bed";
-  source: "openrouter" | "offline";
+  source: "gemini" | "openrouter" | "offline";
   notice?: string;
 };
 export type Task = {
@@ -99,7 +99,7 @@ function localFallback(
     message,
     outcome,
     source: "offline",
-    notice: "Offline character · OpenRouter is unavailable.",
+    notice: "Offline character · The AI is unavailable.",
   };
 }
 export async function ask(
@@ -137,13 +137,17 @@ export async function ask(
         notice:
           res.status === 429
             ? "Too many messages at once. The offline character is replying; try again shortly."
-            : "The AI server could not complete this message. The offline character is replying.",
+            : res.status === 403
+              ? "The AI server rejected this app’s connection (403). The offline character is replying."
+              : res.status === 400
+                ? "The AI server rejected the chat request (400). The offline character is replying."
+                : `The AI server returned an error (${res.status}). The offline character is replying.`,
       };
     const data = await res.json();
     if (
       typeof data.message !== "string" ||
       !["continue", "awake", "bed"].includes(data.outcome) ||
-      !["openrouter", "offline"].includes(data.source)
+      !["gemini", "openrouter", "offline"].includes(data.source)
     )
       throw new Error("Invalid reply");
     return data;
@@ -153,7 +157,7 @@ export async function ask(
       notice:
         error instanceof Error &&
         ["TimeoutError", "AbortError"].includes(error.name)
-          ? "OpenRouter took too long to respond. The offline character is replying; try your next message again."
+          ? "The AI took too long to respond. The offline character is replying; try your next message again."
           : "Could not reach the AI server. The offline character is replying. Check your connection and try again.",
     };
   }
@@ -379,9 +383,10 @@ export function Onboarding({
           )}
         </div>
         <p className="intro-privacy">
-          Keep it light. Your profile stays on this device and is sent to
-          OpenRouter with your chats to personalize replies. Don’t share private
-          details. This is a comedy app; your responsibilities still matter.
+          Keep it light. Your profile stays on this device and is sent to the
+          selected AI provider with your chats to personalize replies. Don’t
+          share private details. This is a comedy app; your responsibilities
+          still matter.
         </p>
       </div>
     </main>

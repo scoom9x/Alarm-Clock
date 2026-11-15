@@ -27,3 +27,11 @@ Not verified: full axe scan, VoiceOver, Safari, emulated reduced-motion behavior
 At the user’s request, replaced Gemini with OpenRouter’s Chat Completions API, server-side bearer authentication, strict JSON schema, and default `openrouter/free` model routing. The private environment file now contains only the OpenRouter credentials. Client source labels and error messages now identify OpenRouter. All 13 automated tests pass, including authorization, response parsing, quota errors, and insufficient credits.
 
 Live OpenRouter onboarding smoke test passed in 3.3 seconds with `source: openrouter`. Running `/api/health` confirmed `provider: openrouter` and `model: openrouter/free`. Production build and iOS asset sync passed.
+
+## Gemini key update
+
+Selected Gemini explicitly with the newly supplied server-only key. Kept optional OpenRouter support so changing providers no longer requires rewriting the integration. All 15 automated tests and the production build pass. Verified the actual `/api/chat` endpoint with an Origin header: HTTP 200, source `gemini`, real onboarding reply. The key remains ignored and is not included in the repository or app bundle. Client errors now distinguish HTTP 400 and 403 from provider unavailability.
+
+Browser follow-up identified a Gemini timeout on an actual chat request, despite successful endpoint replays. Added one bounded retry for timeouts, connection failures, and HTTP 502/503/504. Each attempt has a 12-second deadline, within the client's 28-second timeout. Quota and credential failures are never retried. Two additional automated tests cover retry behavior and non-retryable errors.
+
+Final check: all 17 automated tests, production build, and iOS asset sync passed. In the actual browser, a fresh onboarding message received a personalized Gemini reply with no offline warning after timeout recovery was added. The saved profile was restored after the test.

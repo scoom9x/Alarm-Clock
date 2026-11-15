@@ -5,7 +5,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       {
-        name: "private-gemini-api",
+        name: "private-ai-api",
         configureServer(server) {
           server.middlewares.use(aiMiddleware(env));
         },

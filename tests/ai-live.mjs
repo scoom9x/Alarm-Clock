@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { reply, PG13 } from "../server/ai.mjs";
+import { reply, PG13, aiConfig } from "../server/ai.mjs";
 const profile = {
   name: "Test User",
   role: "Student",
@@ -59,7 +59,7 @@ for (const c of selected) {
         );
         assert.equal(
           result.source,
-          "openrouter",
+          aiConfig(process.env).provider,
           result.notice || "Not a live OpenRouter reply",
         );
         assert.equal(result.outcome, c.outcome);

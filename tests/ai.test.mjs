@@ -5,6 +5,8 @@ import {
   reply,
   safeText,
   validateInput,
+  aiConfig,
+  aiMiddleware,
 } from "../server/ai.mjs";
 const input = {
   mode: "alarm",
@@ -194,4 +196,141 @@ test("insufficient OpenRouter credit is reported clearly", async () => {
   );
   assert.equal(result.source, "offline");
   assert.match(result.notice, /insufficient credits/);
+});
+
+test("Gemini configuration uses only the selected key and structured request", async () => {
+  let request;
+  const result = await reply(
+    { ...input, messages: [{ role: "user", text: "I need to wake up" }] },
+    {
+      AI_PROVIDER: "gemini",
+      GEMINI_API_KEY: "private-gemini-key",
+      OPENROUTER_API_KEY: "unused",
+    },
+    async (url, options) => {
+      request = { url, ...options };
+      return {
+        ok: true,
+        json: async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      message: "You win. Good morning!",
+                      outcome: "awake",
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      };
+    },
+  );
+  assert.equal(result.source, "gemini");
+  assert.equal(result.outcome, "awake");
+  assert.equal(request.headers["x-goog-api-key"], "private-gemini-key");
+  assert.ok(request.url.includes("gemini-3.1-flash-lite:generateContent"));
+  assert.ok(!request.body.includes("private-gemini-key"));
+  assert.equal(
+    aiConfig({ AI_PROVIDER: "gemini", OPENROUTER_API_KEY: "unused" }).key,
+    undefined,
+  );
+});
+test("browser chat endpoint handles valid JSON and rejects disallowed origins", async () => {
+  const handle = aiMiddleware({}, async (body) => ({
+    message: body.messages[0].text,
+    outcome: "continue",
+    source: "gemini",
+  }));
+  const call = async (origin, body) => {
+    let output;
+    const req = {
+      url: "/api/chat",
+      method: "POST",
+      headers: { origin },
+      socket: { remoteAddress: "test-browser" },
+      async *[Symbol.asyncIterator]() {
+        yield body;
+      },
+    };
+    const res = {
+      statusCode: 200,
+      setHeader() {},
+      end(value) {
+        output = value;
+      },
+    };
+    await handle(req, res, () => {
+      throw Error("Unexpected next");
+    });
+    return { status: res.statusCode, body: JSON.parse(output) };
+  };
+  const valid = await call(
+    "http://localhost:5173",
+    JSON.stringify({ messages: [{ role: "user", text: "hello" }] }),
+  );
+  assert.equal(valid.status, 200);
+  assert.equal(valid.body.source, "gemini");
+  assert.equal(valid.body.message, "hello");
+  assert.equal((await call("https://unrelated.example", "{}")).status, 403);
+  assert.equal((await call("http://localhost:5173", "not json")).status, 400);
+});
+
+test("one transient provider failure is retried with a bounded attempt count", async () => {
+  for (const failure of ["timeout", "connection", "unavailable"]) {
+    let calls = 0;
+    const result = await reply(
+      input,
+      { AI_PROVIDER: "gemini", GEMINI_API_KEY: "test" },
+      async () => {
+        calls++;
+        if (calls === 1) {
+          if (failure === "unavailable") return { ok: false, status: 503 };
+          const error = new Error("temporary");
+          error.name = failure === "timeout" ? "TimeoutError" : "TypeError";
+          throw error;
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        message: "Why leave this cozy bed?",
+                        outcome: "continue",
+                      }),
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        };
+      },
+    );
+    assert.equal(calls, 2);
+    assert.equal(result.source, "gemini");
+  }
+});
+test("quota and credential failures are never automatically retried", async () => {
+  for (const status of [400, 401, 403, 429]) {
+    let calls = 0;
+    const result = await reply(
+      input,
+      { AI_PROVIDER: "gemini", GEMINI_API_KEY: "test" },
+      async () => {
+        calls++;
+        return { ok: false, status };
+      },
+    );
+    assert.equal(calls, 1);
+    assert.equal(result.source, "offline");
+  }
 });
