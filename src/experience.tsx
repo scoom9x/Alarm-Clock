@@ -114,7 +114,11 @@ export async function ask(
       .VITE_AI_BASE_URL || "";
   try {
     if (Capacitor.isNativePlatform() && !base)
-      throw new Error("No native backend");
+      return {
+        ...localFallback(mode, messages, profile, nextQuestion),
+        notice:
+          "Live AI is not connected on this device. The offline character is replying.",
+      };
     const res = await fetch(`${base}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -127,16 +131,31 @@ export async function ask(
       }),
       signal: AbortSignal.timeout(28000),
     });
-    if (!res.ok) throw new Error("Chat unavailable");
+    if (!res.ok)
+      return {
+        ...localFallback(mode, messages, profile, nextQuestion),
+        notice:
+          res.status === 429
+            ? "Too many messages at once. The offline character is replying; try again shortly."
+            : "The AI server could not complete this message. The offline character is replying.",
+      };
     const data = await res.json();
     if (
       typeof data.message !== "string" ||
-      !["continue", "awake", "bed"].includes(data.outcome)
+      !["continue", "awake", "bed"].includes(data.outcome) ||
+      !["gemini", "offline"].includes(data.source)
     )
       throw new Error("Invalid reply");
     return data;
-  } catch {
-    return localFallback(mode, messages, profile, nextQuestion);
+  } catch (error) {
+    return {
+      ...localFallback(mode, messages, profile, nextQuestion),
+      notice:
+        error instanceof Error &&
+        ["TimeoutError", "AbortError"].includes(error.name)
+          ? "Gemini took too long to respond. The offline character is replying; try your next message again."
+          : "Could not reach the AI server. The offline character is replying. Check your connection and try again.",
+    };
   }
 }
 function Avatar() {

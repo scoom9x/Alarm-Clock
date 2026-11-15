@@ -91,6 +91,7 @@ test("malformed and unsafe model output fail to safe character", async () => {
     { GEMINI_API_KEY: "test" },
     model(JSON.stringify({ message: "You are worthless", outcome: "bed" })),
   );
+  assert.equal(unsafe.source, "offline");
   assert.equal(unsafe.outcome, "continue");
   assert.ok(!unsafe.message.includes("worthless"));
 });
@@ -120,4 +121,60 @@ test("valid structured model outcome reaches the client", async () => {
   );
   assert.equal(result.source, "gemini");
   assert.equal(result.outcome, "awake");
+});
+
+test("empty or incomplete structured replies are labeled offline", async () => {
+  for (const result of [
+    {},
+    { message: "", outcome: "awake" },
+    { message: "Hello", outcome: "unknown" },
+  ]) {
+    const response = await reply(
+      input,
+      { GEMINI_API_KEY: "test" },
+      async () => ({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            { content: { parts: [{ text: JSON.stringify(result) }] } },
+          ],
+        }),
+      }),
+    );
+    assert.equal(response.source, "offline");
+    assert.match(response.notice, /invalid/);
+  }
+});
+
+test("daily quota failures explain the reset and retain safe behavior", async () => {
+  const result = await reply(input, { GEMINI_API_KEY: "test" }, async () => ({
+    ok: false,
+    status: 429,
+    json: async () => ({
+      error: {
+        details: [
+          {
+            violations: [
+              { quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier" },
+            ],
+          },
+          {
+            "@type": "type.googleapis.com/google.rpc.RetryInfo",
+            retryDelay: "3600s",
+          },
+        ],
+      },
+    }),
+  }));
+  assert.equal(result.source, "offline");
+  assert.match(result.notice, /daily quota/);
+  assert.equal(result.retryAfterSeconds, 3600);
+});
+test("temporary rate limits are distinguished from daily quota", async () => {
+  const result = await reply(input, { GEMINI_API_KEY: "test" }, async () => ({
+    ok: false,
+    status: 429,
+    json: async () => ({ error: { details: [] } }),
+  }));
+  assert.match(result.notice, /temporarily rate-limited/);
 });

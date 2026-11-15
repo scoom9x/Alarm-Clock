@@ -14,3 +14,10 @@
 - Source, tracked files, and production output scanned for the supplied key: no copies found outside ignored `.env.local`.
 
 Not verified: full axe scan, VoiceOver, Safari, emulated reduced-motion behavior, physical-device notifications, powered-off behavior, or live Gemini on a physical iPhone. CSS disables the live pulse under reduced motion and uses instant transcript scrolling. A hosted HTTPS API must be configured for live Gemini in an installed iPhone app; otherwise it uses the offline character. Fully powered-off phones cannot run these alarms. Locked-phone notifications do not continuously ring until chat completion.
+
+## AI follow-up
+
+- Expanded to 11 passing automated tests, including incomplete-model-output labeling and daily versus temporary quota errors.
+- Live requests confirmed that the original Flash model hit its 20-request free-tier daily quota. The offline character is expected under that condition; it must not be labeled as a live Gemini response.
+- Switched the default to `gemini-3.1-flash-lite`, which returned a real onboarding response using the same key. No key changes were needed.
+- Live smoke tests use one real request by default; `--all` explicitly runs five scenarios. They require `source: gemini`, so a working fallback does not create a false pass.

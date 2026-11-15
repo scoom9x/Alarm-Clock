@@ -11,10 +11,12 @@ cp .env.example .env.local # skip if your private .env.local already exists
 npm run dev
 ```
 
-Open http://localhost:5173. The Vite server handles `/api/chat` and calls Gemini server-side. The key never enters the browser bundle. The supplied key is saved only in the ignored `.env.local` file. Default model: `gemini-3.5-flash` with minimal thinking for low latency; override with `GEMINI_MODEL`.
+Open http://localhost:5173. The Vite server handles `/api/chat` and calls Gemini server-side. The key never enters the browser bundle. The supplied key is saved only in the ignored `.env.local` file. Default model: `gemini-3.1-flash-lite` with minimal thinking for low latency; override with `GEMINI_MODEL`.
 
 ```sh
 npm test
+npm run test:ai:live # one real Gemini request, consumes quota
+# npm run test:ai:live -- --all # all five live scenarios, consumes five requests
 npm run build
 npm start # local production server at http://localhost:3001
 ```
@@ -54,3 +56,5 @@ A browser must stay open to ring alarms or show task reminders. Timer completion
 Profiles, tasks, and debate outcomes remain in local storage. Profile data and chat text are sent to Google only when requesting AI replies; task titles are sent when generating reminder copy. The Node API does not log or retain chats. Avoid entering private or sensitive details.
 
 The SvaraNova `frontend-ui` skill was installed and used for the React/plain-CSS design, shared tokens, semantic controls, visible labels, keyboard behavior, and responsive browser checks. See [SvaraNova/skills](https://github.com/SvaraNova/skills).
+
+If the AI says it is offline, check the displayed reason. Daily quota exhaustion requires waiting for the provider reset or changing the server-side model to one with available quota. Temporary rate limits, invalid credentials, filtered responses, and unreachable servers are reported separately. Automated tests use mocked responses and consume no Gemini quota.
