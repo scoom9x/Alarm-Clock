@@ -11,6 +11,8 @@ import {
   Sun,
   X,
   Minus,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import {
@@ -18,6 +20,16 @@ import {
   type LocalNotificationSchema,
 } from "@capacitor/local-notifications";
 import "./style.css";
+import {
+  AlarmConversation,
+  ModalShell,
+  ReminderNudges,
+  Dashboard,
+  Onboarding,
+  readProfile,
+  stored,
+  type Profile,
+} from "./experience";
 type Alarm = {
   id: number;
   time: string;
@@ -98,9 +110,15 @@ function nextTime(a: Alarm) {
 async function schedule(list: Alarm[]) {
   if (!Capacitor.isNativePlatform()) return;
   const pending = await LocalNotifications.getPending();
-  if (pending.notifications.length) await LocalNotifications.cancel(pending);
+  const alarmNotifications = pending.notifications.filter(
+    (n) => n.id < 2100000000,
+  );
   const active = list.filter((a) => a.enabled);
-  if (!active.length) return;
+  if (!active.length) {
+    if (alarmNotifications.length)
+      await LocalNotifications.cancel({ notifications: alarmNotifications });
+    return;
+  }
   let permission = await LocalNotifications.checkPermissions();
   if (permission.display !== "granted")
     permission = await LocalNotifications.requestPermissions();
@@ -108,34 +126,43 @@ async function schedule(list: Alarm[]) {
     throw new Error(
       "Allow notifications in Settings so your alarms can alert you.",
     );
-  await LocalNotifications.schedule({
-    notifications: active.flatMap<LocalNotificationSchema>((a) =>
-      a.days.length
-        ? a.days.map((day) => ({
-            id: a.id * 10 + day,
+  const notifications = active.flatMap<LocalNotificationSchema>((a) =>
+    a.days.length
+      ? a.days.map((day) => ({
+          id: a.id * 10 + day,
+          title: a.label || "Alarm",
+          body: "Your bed has a counteroffer. Open Alarm Clock to make your case.",
+          extra: { kind: "alarm", alarmId: a.id },
+          sound: "default",
+          schedule: {
+            on: {
+              weekday: day + 1,
+              hour: Number(a.time.split(":")[0]),
+              minute: Number(a.time.split(":")[1]),
+            },
+            repeats: true,
+          },
+        }))
+      : [
+          {
+            id: a.id * 10 + 7,
             title: a.label || "Alarm",
-            body: "Time to wake up.",
+            body: "Your bed has a counteroffer. Open Alarm Clock to make your case.",
+            extra: { kind: "alarm", alarmId: a.id },
             sound: "default",
-            schedule: {
-              on: {
-                weekday: day + 1,
-                hour: Number(a.time.split(":")[0]),
-                minute: Number(a.time.split(":")[1]),
-              },
-              repeats: true,
-            },
-          }))
-        : [
-            {
-              id: a.id * 10 + 7,
-              title: a.label || "Alarm",
-              body: "Time to wake up.",
-              sound: "default",
-              schedule: { at: nextTime(a) },
-            },
-          ],
-    ),
-  });
+            schedule: { at: nextTime(a) },
+          },
+        ],
+  );
+  if (notifications.length > 32)
+    throw new Error(
+      "Choose fewer repeat days or enabled alarms (32 scheduled alerts maximum, leaving room for task reminders).",
+    );
+  await LocalNotifications.schedule({ notifications });
+  const keep = new Set(notifications.map((n) => n.id));
+  const removed = alarmNotifications.filter((n) => !keep.has(n.id));
+  if (removed.length)
+    await LocalNotifications.cancel({ notifications: removed });
 }
 function App() {
   const [alarms, setAlarms] = useState(read);
@@ -143,7 +170,11 @@ function App() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Alarm | null>(null);
   const [now, setNow] = useState(new Date());
-  const [ring, setRing] = useState<Alarm | null>(null);
+  const [ring, setRing] = useState<Alarm | null>(() =>
+    stored<Alarm | null>("duvet-active-alarm", null),
+  );
+  const [profile, setProfile] = useState<Profile | null>(readProfile);
+  const [editProfile, setEditProfile] = useState(false);
   const [error, setError] = useState("");
   const fired = useRef(new Set<string>());
   const [running, setRunning] = useState(false);
@@ -215,32 +246,48 @@ function App() {
     return () => clearInterval(id);
   }, [running]);
   useEffect(() => {
-    if (!ring) return;
-    const beep = () => {
-      try {
-        const ctx = audio.current || new AudioContext();
-        audio.current = ctx;
-        void ctx.resume();
-        [0, 0.18, 0.36].forEach((delay) => {
-          const osc = ctx.createOscillator(),
-            gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.frequency.value = 880;
-          gain.gain.setValueAtTime(0.13, ctx.currentTime + delay);
-          gain.gain.exponentialRampToValueAtTime(
-            0.001,
-            ctx.currentTime + delay + 0.15,
-          );
-          osc.start(ctx.currentTime + delay);
-          osc.stop(ctx.currentTime + delay + 0.16);
-        });
-      } catch {}
-    };
-    beep();
-    const id = setInterval(beep, 1500);
-    return () => clearInterval(id);
+    if (ring) {
+      localStorage.setItem("duvet-active-alarm", JSON.stringify(ring));
+      if (!localStorage.getItem("duvet-ring-start"))
+        localStorage.setItem("duvet-ring-start", String(Date.now()));
+    }
   }, [ring]);
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listener = LocalNotifications.addListener(
+      "localNotificationActionPerformed",
+      ({ notification }) => {
+        if (notification.extra?.kind === "reminder") {
+          setTab("Your day");
+          return;
+        }
+        const alarm = stored<Alarm[]>("clock-alarms", []).find(
+          (a) => a.id === notification.extra?.alarmId,
+        );
+        if (alarm) {
+          setRing(alarm);
+          if (!alarm.days.length)
+            setAlarms((v) =>
+              v.map((a) => (a.id === alarm.id ? { ...a, enabled: false } : a)),
+            );
+        }
+      },
+    );
+    return () => {
+      void listener.then((handle) => handle.remove());
+    };
+  }, []);
+  function demo() {
+    setRing({
+      id: -1,
+      time: new Date().toTimeString().slice(0, 5),
+      label: "Practice alarm",
+      days: [],
+      enabled: false,
+      snooze: false,
+      sound: "Radar",
+    });
+  }
   async function commit(list: Alarm[]) {
     try {
       await schedule(list);
@@ -258,7 +305,7 @@ function App() {
   const duration = next ? Math.ceil((+next - +now) / 60000) : 0;
   const add = () =>
     setDraft({
-      id: Math.floor(Date.now() / 1000) % 200000000,
+      id: crypto.getRandomValues(new Uint32Array(1))[0] % 200000000,
       time: "07:00",
       label: "Alarm",
       days: [],
@@ -268,12 +315,38 @@ function App() {
     });
   const stopwatch = (ms: number) =>
     `${String(Math.floor(ms / 60000)).padStart(2, "0")}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}.${String(Math.floor(ms / 10) % 100).padStart(2, "0")}`;
+  if (!profile || editProfile)
+    return (
+      <Onboarding
+        onComplete={(p) => {
+          setProfile(p);
+          setEditProfile(false);
+        }}
+        onCancel={profile ? () => setEditProfile(false) : undefined}
+      />
+    );
+  if (ring)
+    return (
+      <AlarmConversation
+        label={ring.label}
+        profile={profile}
+        onFinish={() => {
+          setRing(null);
+          localStorage.removeItem("duvet-active-alarm");
+          localStorage.removeItem("duvet-ring-start");
+          setTab("Your day");
+        }}
+      />
+    );
   return (
     <div className="app">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <header>
         <div className="brand">
           <Clock3 size={21} />
-          <span>Clock</span>
+          <span>Alarm Clock</span>
         </div>
         <span className="date">
           {now.toLocaleDateString("en-US", {
@@ -282,13 +355,24 @@ function App() {
             day: "numeric",
           })}
         </span>
+        <button className="profile-button" onClick={() => setEditProfile(true)}>
+          <Sparkles size={13} />
+          <span>
+            {profile.name} · {profile.tone}
+          </span>
+        </button>
         <span className="live-dot" />{" "}
       </header>
-      <main>
+      <main id="main" tabIndex={-1}>
         <div className="toolbar">
-          <button className="text-button" onClick={() => setEditing(!editing)}>
-            {tab === "Alarm" ? (editing ? "Done" : "Edit") : ""}
-          </button>
+          {tab === "Alarm" && (
+            <button
+              className="text-button"
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? "Done" : "Edit"}
+            </button>
+          )}
           {tab === "Alarm" && (
             <button className="add-button" aria-label="Add alarm" onClick={add}>
               <Plus size={27} />
@@ -298,45 +382,33 @@ function App() {
         <div className="title-row">
           <h1>{tab === "Alarm" ? "Alarms" : tab}</h1>
           <span className="eyebrow">
-            {tab === "Alarm" ? "MAKE TIME FOR A GOOD MORNING" : ""}
+            {tab === "Alarm" ? "A LITTLE FRIENDLY SABOTAGE" : ""}
           </span>
         </div>
-        {tab === "Alarm" ? (
+        {tab === "Your day" ? (
+          <Dashboard
+            profile={profile}
+            onEdit={() => setEditProfile(true)}
+            onDemo={demo}
+            onReset={() => {
+              localStorage.removeItem("duvet-profile");
+              setProfile(null);
+            }}
+          />
+        ) : tab === "Alarm" ? (
           <>
-            <section className="sleep-card">
-              <div className="sleep-top">
+            <button className="demo-banner" onClick={demo}>
+              <BedDouble size={27} />
+              <div>
+                <strong>Your bed has a counteroffer.</strong>
                 <span>
-                  <BedDouble size={21} /> Sleep | Wake Up
+                  Meet Duvet, your {profile.tone.toLowerCase()} unproductivity
+                  sidekick.
                 </span>
-                <span className="pill">YOUR ROUTINE</span>
               </div>
-              <div className="sleep-content">
-                <div className="sun-icon">
-                  <Sun size={31} />
-                </div>
-                <div>
-                  <h2>A better day starts tonight.</h2>
-                  <p>Give your mornings a little more rhythm.</p>
-                </div>
-                <button
-                  className="round-link"
-                  aria-label="Set a wake-up alarm"
-                  onClick={() =>
-                    setDraft({
-                      id: Math.floor(Date.now() / 1000) % 200000000,
-                      time: "07:00",
-                      label: "Wake Up",
-                      days: [1, 2, 3, 4, 5],
-                      enabled: true,
-                      snooze: true,
-                      sound: "Radar",
-                    })
-                  }
-                >
-                  <ChevronRight size={22} />
-                </button>
-              </div>
-            </section>
+              <small>TRY AN ALARM</small>
+              <ChevronRight size={18} />
+            </button>
             <div className="section-heading">
               <h2>
                 Your alarms <span>{alarms.length}</span>
@@ -430,7 +502,9 @@ function App() {
                 </span>
               </div>
             </div>
-            <p className="footnote">A fresh start, right on time.</p>
+            <p className="footnote">
+              An alarm with questionable intentions. Strictly PG-13.
+            </p>
           </>
         ) : tab === "World Clock" ? (
           <div className="world-list">
@@ -534,15 +608,17 @@ function App() {
           </section>
         )}
       </main>
-      <nav>
+      <nav aria-label="Clock sections">
         {[
           { name: "World Clock", Icon: Globe2 },
           { name: "Alarm", Icon: AlarmClock },
           { name: "Stopwatch", Icon: Clock3 },
           { name: "Timers", Icon: Timer },
+          { name: "Your day", Icon: BarChart3 },
         ].map(({ name, Icon }) => (
           <button
             className={tab === name ? "selected" : ""}
+            aria-current={tab === name ? "page" : undefined}
             key={name}
             onClick={() => {
               setTab(name);
@@ -555,9 +631,13 @@ function App() {
         ))}
       </nav>
       {draft && (
-        <div className="overlay" onClick={() => setDraft(null)}>
+        <ModalShell onClose={() => setDraft(null)}>
           <form
             className="modal"
+
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setDraft(null);
+            }}
             onClick={(e) => e.stopPropagation()}
             onSubmit={async (e) => {
               e.preventDefault();
@@ -583,6 +663,7 @@ function App() {
             </div>
             <input
               className="time-input"
+              autoFocus
               type="time"
               aria-label="Alarm time"
               required
@@ -627,18 +708,10 @@ function App() {
               <label>
                 Sound<span className="sound-label">Radar</span>
               </label>
-              <label>
-                Snooze
-                <button
-                  type="button"
-                  className={`toggle ${draft.snooze ? "on" : ""}`}
-                  role="switch"
-                  aria-checked={draft.snooze}
-                  onClick={() => setDraft({ ...draft, snooze: !draft.snooze })}
-                >
-                  <span />
-                </button>
-              </label>
+              <p className="alarm-mode-note">
+                To stop this alarm, make your case to Duvet or agree to go back
+                to bed. Emergency stop is always available.
+              </p>
             </div>
             {alarms.some((a) => a.id === draft.id) && (
               <button
@@ -653,42 +726,9 @@ function App() {
               </button>
             )}
           </form>
-        </div>
+        </ModalShell>
       )}
-      {ring && (
-        <div className="overlay ringing">
-          <Sun size={54} />
-          <h1>{ring.label}</h1>
-          <div className="ring-time">
-            {now.toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-          </div>
-          {ring.snooze && (
-            <button
-              className="snooze"
-              onClick={async () => {
-                const d = new Date(Date.now() + 9 * 60000);
-                const a = {
-                  ...ring,
-                  id: Math.floor(Date.now() / 1000) % 200000000,
-                  time: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
-                  days: [],
-                  enabled: true,
-                };
-                await commit([...alarms, a]);
-                setRing(null);
-              }}
-            >
-              Snooze for 9 minutes
-            </button>
-          )}
-          <button className="dismiss" onClick={() => setRing(null)}>
-            Stop
-          </button>
-        </div>
-      )}
+      <ReminderNudges />
       {error && (
         <div role="alert" className="toast">
           {error}

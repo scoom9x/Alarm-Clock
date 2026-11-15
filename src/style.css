@@ -679,3 +679,101 @@ nav .selected {
     transition: none !important;
   }
 }
+
+/* Shared tokens for Duvet screens. Fixed dark appearance, matching Clock. */
+:root {
+  --spacing: 0.25rem;
+  --z-screen: 20;
+  --z-toast: 50;
+  --duration-pulse: 1.5s;
+  --duvet-bg: #101014;
+  --duvet-surface: #1a191e;
+  --duvet-raised: #29262d;
+  --duvet-input: #101014;
+  --duvet-fg: #f5f3ef;
+  --duvet-muted: #b7adbf;
+  --duvet-accent: #f6bd7d;
+  --duvet-accent-fg: #29190d;
+  --duvet-border: #454047;
+  --duvet-border-strong: #807585;
+  --duvet-warm-surface: #342b29;
+  --duvet-warm-border: #73502d;
+  --duvet-warm-fg: #ffcf9d;
+  --duvet-user-surface: #443325;
+  --duvet-user-fg: #ffe1be;
+  --duvet-success: #55d87c;
+  --duvet-shadow: #0003;
+  --duvet-backdrop: #000a;
+  --duvet-glow: #ffac5520;
+  --duvet-glow-subtle: #ffac5512;
+  --duvet-transparent-warm: #362b253b;
+  --duvet-text-10: 0.625rem;
+  --duvet-text-11: 0.6875rem;
+  --duvet-text-12: 0.75rem;
+  --duvet-text-13: 0.8125rem;
+  --duvet-text-14: 0.875rem;
+  --duvet-text-15: 0.9375rem;
+  --duvet-text-17: 1.0625rem;
+  --duvet-text-28: 1.75rem;
+  --duvet-text-29: 1.8125rem;
+  --duvet-text-32: 2rem;
+  --duvet-text-33: 2.0625rem;
+  --duvet-text-34: 2.125rem;
+  --duvet-text-40: 2.5rem;
+  --duvet-text-43: 2.6875rem;
+  --duvet-text-49: 3.0625rem;
+  --duvet-text-66: 4.125rem;
+  --duvet-text-7: 0.4375rem;
+  --duvet-text-8: 0.5rem;
+  --duvet-text-9: 0.5625rem;
+}
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/Manrope-Variable.ttf") format("truetype");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/BarlowCondensed-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+:root {
+  --font-body: Manrope, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Barlow Condensed", Manrope, sans-serif;
+  --duvet-radius-sm: 8px;
+  --duvet-radius-lg: 16px;
+  --duvet-display-size: 64px;
+  --duvet-heading-size: 49px;
+  --duvet-subtitle-size: 25px;
+  --duvet-numeric-size: 31px;
+  --duvet-text-16: 1rem;
+  --duvet-text-7: 0.6875rem;
+  --duvet-text-8: 0.6875rem;
+  --duvet-text-9: 0.6875rem;
+  --duvet-text-10: 0.6875rem;
+  font-family: var(--font-body);
+}
+
+/* Equivalent OKLCH roles; hex declarations above support older web views. */
+@supports (color: oklch(0.5 0.1 70)) {
+  :root {
+    --duvet-bg: oklch(0.17491 0.00821 285.52);
+    --duvet-surface: oklch(0.21674 0.00979 294.74);
+    --duvet-raised: oklch(0.27473 0.01341 304.885);
+    --duvet-input: oklch(0.17491 0.00821 285.52);
+    --duvet-fg: oklch(0.96458 0.00574 84.566);
+    --duvet-muted: oklch(0.76156 0.02763 310.325);
+    --duvet-accent: oklch(0.83625 0.10422 68.833);
+    --duvet-accent-fg: oklch(0.23102 0.03323 57.072);
+    --duvet-border: oklch(0.37906 0.01345 316.418);
+    --duvet-border-strong: oklch(0.57775 0.02741 315.385);
+    --duvet-warm-surface: oklch(0.29834 0.01383 32.603);
+    --duvet-warm-border: oklch(0.46134 0.06862 64.685);
+    --duvet-warm-fg: oklch(0.88465 0.08439 67.529);
+    --duvet-user-surface: oklch(0.33616 0.03382 60.76);
+    --duvet-user-fg: oklch(0.92574 0.05658 71.334);
+    --duvet-success: oklch(0.78768 0.17349 150.245);
+  }
+}
