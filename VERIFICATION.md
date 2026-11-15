@@ -55,3 +55,9 @@ Removed personality-selection questions and wake-up-justification prompts. Onboa
 - Added server-only ElevenLabs text-to-speech and speech-to-text endpoints with origin checks, request limits and sanitized errors. Push-to-talk silences alarm during recording/playback, caps recording at 30 seconds, and retains text input.
 - Added iOS microphone usage description. Build, Capacitor sync and all 26 automated tests pass (five voice endpoint tests use mocked ElevenLabs responses).
 - Live ElevenLabs testing pending: Chrome account sign-in displayed “Unable to sign in”; no ElevenLabs key configured. Voice must not be reported as live until authenticated and tested.
+
+## ElevenLabs live connection
+- Created user-approved restricted Alarm Clock Duvet key: speech synthesis and transcription only; 10,000-credit refresh-period limit; expires December 15, 2026. Stored only in ignored `.env.local`.
+- Live synthesis produced a 74,439-byte MP3. Live Scribe transcription returned: “Your pillow has an excellent proposal. Five more minutes. Stay in bed”.
+- Reloaded Vite; running localhost:5173 `/api/voice/status` reports configured=true.
+- Microphone capture and a full human voice conversation still require testing with a person; automated live check used synthesized audio for transcription.
