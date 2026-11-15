@@ -1280,3 +1280,8 @@ button:disabled {
     max-height: 30dvh;
   }
 }
+
+.voice-controls { display: flex; flex-wrap: wrap; gap: calc(var(--spacing) * 3); padding-block: calc(var(--spacing) * 3); }
+.voice-controls button { min-height: calc(var(--spacing) * 11); padding: calc(var(--spacing) * 3); border: calc(var(--spacing) * 0.25) solid var(--duvet-border-strong); border-radius: calc(var(--spacing) * 2); color: inherit; background: var(--duvet-surface); font: inherit; cursor: pointer; }
+.voice-controls button:disabled { opacity: 0.5; cursor: wait; }
+.voice-controls p { flex-basis: 100%; margin: 0; }

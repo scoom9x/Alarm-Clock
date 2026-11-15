@@ -45,3 +45,13 @@ Onboarding now asks the AI whether an answer fits the current question. Off-topi
 All 20 automated tests and the production build pass. A live HTTP request with Origin http://127.0.0.1:5173 to localhost:5173 returned HTTP 200, source gemini, message “1+1 is 2!”, and advance false.
 
 Chrome verification: submitted “whats 1+1” in the actual UI. Gemini replied “It is 2, though I much prefer counting sheep while tucked in! What should I call you?” The UI displayed “Live Gemini reply,” remained at question 1/4, and showed no offline notice. Chrome was left open on this verified exchange.
+
+## Stupid Ideas hackathon personality update
+
+Removed personality-selection questions and wake-up-justification prompts. Onboarding has three questions and infers tone from the answers. Alarm and reminder instructions now use playful status-quo comfort, small commitments, earned-rest framing, and immediate sensory rewards, personalized to ordinary responsibilities. Mentioning school/work does not itself stop the alarm; an explicit final wake/bed choice does. PG-13 boundaries and emergency stop remain.
+
+## Monster siren and ElevenLabs voice
+- Replaced gentle beep with synthesized sweeping sawtooth/square monster sirens; eight stackable layers, master gain and compressor, mute/emergency stop retained.
+- Added server-only ElevenLabs text-to-speech and speech-to-text endpoints with origin checks, request limits and sanitized errors. Push-to-talk silences alarm during recording/playback, caps recording at 30 seconds, and retains text input.
+- Added iOS microphone usage description. Build, Capacitor sync and all 26 automated tests pass (five voice endpoint tests use mocked ElevenLabs responses).
+- Live ElevenLabs testing pending: Chrome account sign-in displayed “Unable to sign in”; no ElevenLabs key configured. Voice must not be reported as live until authenticated and tested.

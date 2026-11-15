@@ -408,3 +408,16 @@ test("off-topic onboarding replies remain on the current question", async () => 
   assert.equal(result.source, "gemini");
   assert.equal(result.advance, false);
 });
+
+test("ordinary responsibilities invite rest instead of ending the alarm or demanding an argument", () => {
+  const result = fallbackReply({
+    mode: "alarm",
+    profile: { tone: "Gentle" },
+    messages: [
+      { role: "user", text: "I have school and coding projects today." },
+    ],
+  });
+  assert.equal(result.outcome, "continue");
+  assert.ok(!result.message.includes("?"));
+  assert.doesNotMatch(result.message, /make.*case|why.*get up|worth.*wak/i);
+});

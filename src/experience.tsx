@@ -1,3 +1,4 @@
+import { VoiceControls } from "./VoiceControls";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUp,
@@ -68,7 +69,7 @@ function localFallback(
   let message =
       mode === "onboarding"
         ? "I couldn’t connect to the AI. Please try your answer again."
-        : "Your pillow would like a word. What makes getting up worth it today?",
+        : "The pillow is already warm. Stay exactly where you are for five more minutes.",
     outcome: Reply["outcome"] = "continue";
   if (mode === "alarm") {
     if (
@@ -81,7 +82,7 @@ function localFallback(
       message =
         "The duvet wins this round. Rest well; you can choose a fresh start later.";
     } else if (
-      /\b(wake|awake|get(ting)? up|class|work|exam|meeting|need|must|appointment|school)\b/i.test(
+      /\b((need|must|want|will|going to) (to )?(wake|get up|leave|go)|getting up|i.?m awake)\b/i.test(
         last,
       )
     ) {
@@ -91,8 +92,8 @@ function localFallback(
     } else
       message =
         profile.tone === "Gentle"
-          ? "You are more than your to-do list. A cozy pause sounds lovely. What makes getting up worth it today?"
-          : "The pillow has made a strong counteroffer: five more minutes of absolutely nothing. What is your argument?";
+          ? "You are more than your to-do list. You’ve earned a soft landing. Let the blanket keep you a little longer."
+          : "Your to-do list can keep standing. You have already mastered lying down. Five more minutes is practically a plan.";
   }
   if (mode === "reminder")
     message =
@@ -212,7 +213,7 @@ function Transcript({
 function Composer({
   onSend,
   busy,
-  placeholder = "Make your case…",
+  placeholder = "Talk to Duvet…",
 }: {
   onSend: (s: string) => void;
   busy: boolean;
@@ -250,8 +251,7 @@ function Composer({
 const questions = [
   "First things first. What should I call you?",
   "What fills your days: studying, working, looking for work, or something else?",
-  "What usually gets you out of bed? Tell me about your everyday responsibilities.",
-  "How should I make my case for staying in bed: Gentle, Cheeky, or Dramatic?",
+  "What is on your plate lately: classes, work, projects, or other plans?",
 ];
 export function Onboarding({
   onComplete,
@@ -263,7 +263,7 @@ export function Onboarding({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      text: `I’m Duvet, your alarm’s questionable life coach. I’ll make a playful case for staying in bed. ${questions[0]}`,
+      text: `I’m Duvet, your alarm’s questionable life coach. I’m here to talk you into staying in bed. ${questions[0]}`,
     },
   ]);
   const [step, setStep] = useState(0);
@@ -287,8 +287,8 @@ export function Onboarding({
       "onboarding",
       next,
       profile,
-      step === 3
-        ? "Setup is complete. Confirm their chosen personality and invite them to set an alarm."
+      step === questions.length - 1
+        ? "Setup is complete. Briefly acknowledge their responsibilities, infer your personality from their answers without asking them to select a tone, and invite them to set an alarm."
         : questions[step + 1],
       undefined,
       questions[step],
@@ -300,16 +300,18 @@ export function Onboarding({
     if (response.source === "offline" || response.advance !== true) return;
     const p = {
       ...profile,
-      [["name", "role", "responsibilities", "tone"][step]]: text,
+      [["name", "role", "responsibilities"][step]]: text,
     };
-    if (step === 3)
-      p.tone = /gentle/i.test(text)
+    if (step === questions.length - 1) {
+      const answers = `${p.role} ${p.responsibilities}`;
+      p.tone = /stress|overwhelm|exhaust|tired|pressure|anxious/i.test(answers)
         ? "Gentle"
-        : /dramatic/i.test(text)
+        : /exam|deadline|interview|project/i.test(answers)
           ? "Dramatic"
           : "Cheeky";
+    }
     setProfile(p);
-    if (step === 3) setReady(true);
+    if (step === questions.length - 1) setReady(true);
     else setStep(step + 1);
   }
   return (
@@ -329,10 +331,10 @@ export function Onboarding({
         <div className="intro-heading">
           <h1>Meet Duvet.</h1>
           <p className="intro-subtitle">Your alarm’s bad influence.</p>
-          <p>Four questions, then we’ll put your mornings up for debate.</p>
+          <p>Three questions. Then your pillow gets an unfair advantage.</p>
           <div
             className="setup-progress"
-            aria-label={`Setup question ${step + 1} of 4`}
+            aria-label={`Setup question ${step + 1} of ${questions.length}`}
           >
             {questions.map((_, i) => (
               <span key={i} className={i <= step ? "complete" : ""} />
@@ -353,7 +355,7 @@ export function Onboarding({
               </span>
             </div>
             <span className="step-count">
-              {ready ? "Ready" : `${step + 1} / 4`}
+              {ready ? "Ready" : `${step + 1} / ${questions.length}`}
             </span>
           </div>
           <Transcript messages={messages} busy={busy} />
@@ -373,9 +375,7 @@ export function Onboarding({
               <div className="quick-replies">
                 {(step === 1
                   ? ["Student", "Working", "Looking for work", "Something else"]
-                  : step === 3
-                    ? ["Gentle", "Cheeky", "Dramatic"]
-                    : []
+                  : []
                 ).map((s) => (
                   <button disabled={busy} key={s} onClick={() => void send(s)}>
                     {s}
@@ -423,13 +423,14 @@ export function AlarmConversation({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      text: `Morning, ${characterName(profile.name)}. ${profile.tone === "Gentle" ? "You are more than your " + (profile.role.toLowerCase().includes("student") ? "grades" : "work") + ". The world can wait a moment." : "Your " + (profile.role.toLowerCase().includes("student") ? "notes" : "to-do list") + " will survive a little suspense."} The bed is making an excellent case. Why get up?`,
+      text: `Morning, ${characterName(profile.name)}. ${profile.tone === "Gentle" ? "You are more than your " + (profile.role.toLowerCase().includes("student") ? "grades" : "work") + ". The world can wait a moment." : "Your " + (profile.role.toLowerCase().includes("student") ? "notes" : "to-do list") + " will survive a little suspense."} Your pillow is already doing its job perfectly. Let it keep going for five more minutes.`,
     },
   ]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [outcome, setOutcome] = useState("");
   const [muted, setMuted] = useState(false);
+  const [voiceActive, setVoiceActive] = useState(false);
   const context = useRef<AudioContext | null>(null);
   const finished = useRef(false);
   useEffect(() => {
@@ -442,33 +443,31 @@ export function AlarmConversation({
     return () => clearInterval(id);
   }, [started, outcome]);
   useEffect(() => {
-    if (muted || outcome) return;
+    if (muted || voiceActive || outcome) return;
     const ctx = new AudioContext();
     context.current = ctx;
     const wake = () => void ctx.resume();
     window.addEventListener("pointerdown", wake);
     void ctx.resume();
+    const master = ctx.createGain();
+    master.gain.value = 0.18;
+    const limiter = ctx.createDynamicsCompressor();
+    master.connect(limiter); limiter.connect(ctx.destination);
     const pulse = () => {
       for (let layer = 0; layer < layers; layer++) {
         const start = ctx.currentTime;
-        [0, 0.22, 0.44].forEach((delay, n) => {
-          const osc = ctx.createOscillator(),
-            gain = ctx.createGain();
-          osc.type = (
-            ["sine", "square", "triangle", "sawtooth"] as OscillatorType[]
-          )[layer % 4];
-          osc.frequency.value =
-            [880, 659, 523, 1047, 392, 784, 440, 1175][layer] + n * layer * 17;
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          gain.gain.setValueAtTime(0.055 / Math.sqrt(layers), start + delay);
-          gain.gain.exponentialRampToValueAtTime(
-            0.001,
-            start + delay + 0.18 + layer * 0.025,
-          );
-          osc.start(start + delay);
-          osc.stop(start + delay + 0.2 + layer * 0.025);
-        });
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = layer % 2 ? "square" : "sawtooth";
+        const low = [150, 440, 260, 680, 320, 880, 190, 1100][layer];
+        osc.frequency.setValueAtTime(low, start);
+        osc.frequency.exponentialRampToValueAtTime(low * 3.1, start + 0.65);
+        osc.frequency.exponentialRampToValueAtTime(low, start + 1.3);
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.5 / Math.sqrt(layers), start + 0.035);
+        gain.gain.setValueAtTime(0.5 / Math.sqrt(layers), start + 1.23);
+        gain.gain.linearRampToValueAtTime(0, start + 1.35);
+        osc.connect(gain); gain.connect(master);
+        osc.start(start); osc.stop(start + 1.36);
       }
     };
     pulse();
@@ -479,7 +478,7 @@ export function AlarmConversation({
       void ctx.close();
       context.current = null;
     };
-  }, [layers, muted, outcome]);
+  }, [layers, muted, voiceActive, outcome]);
   function finish(result: string) {
     if (finished.current) return;
     finished.current = true;
@@ -544,7 +543,7 @@ export function AlarmConversation({
           <p>
             {outcome
               ? "Alarm stopped. Your next move is up to you."
-              : "Convince Duvet to let you wake up. Or admit the bed wins."}
+              : "Duvet knows your plans. It would rather you stayed under the covers."}
           </p>
         </div>
         <div className="ring-dashboard">
@@ -570,14 +569,14 @@ export function AlarmConversation({
         </div>
         <div className="sound-stack" aria-label="Active alarm sounds">
           {[
-            "Radar",
-            "Square bell",
-            "Triangle chime",
-            "Sawtooth buzz",
-            "Low bell",
-            "High bell",
-            "Mid chime",
-            "Sharp buzz",
+            "Monster siren",
+            "Air raid",
+            "Broken horn",
+            "Panic buzzer",
+            "Doom drone",
+            "Emergency wail",
+            "Rusty klaxon",
+            "Final warning",
           ]
             .slice(0, layers)
             .map((name, i) => (
@@ -606,7 +605,8 @@ export function AlarmConversation({
               Back to Alarm Clock <Check size={18} />
             </button>
           ) : (
-            <Composer onSend={send} busy={busy} />
+            <><VoiceControls text={messages.filter(m => m.role === "assistant").at(-1)?.text || ""} busy={busy} onSend={send} onActive={setVoiceActive} />
+            <Composer onSend={send} busy={busy} /></>
           )}
         </div>
         {!outcome && (

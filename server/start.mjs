@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
+import { voiceMiddleware } from "./voice.mjs";
 import { aiMiddleware } from "./ai.mjs";
 const root = resolve("dist");
 const types = {
@@ -11,7 +12,9 @@ const types = {
   ".svg": "image/svg+xml",
   ".json": "application/json",
 };
-const api = aiMiddleware(process.env);
+const chat = aiMiddleware(process.env);
+const voice = voiceMiddleware(process.env);
+const api = (req, res, next) => voice(req, res, () => chat(req, res, next));
 createServer((req, res) =>
   api(req, res, async () => {
     try {

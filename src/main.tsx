@@ -131,7 +131,7 @@ async function schedule(list: Alarm[]) {
       ? a.days.map((day) => ({
           id: a.id * 10 + day,
           title: a.label || "Alarm",
-          body: "Your bed has a counteroffer. Open Alarm Clock to make your case.",
+          body: "Duvet has a better plan: five more minutes. Open Alarm Clock.",
           extra: { kind: "alarm", alarmId: a.id },
           sound: "default",
           schedule: {
@@ -147,7 +147,7 @@ async function schedule(list: Alarm[]) {
           {
             id: a.id * 10 + 7,
             title: a.label || "Alarm",
-            body: "Your bed has a counteroffer. Open Alarm Clock to make your case.",
+            body: "Duvet has a better plan: five more minutes. Open Alarm Clock.",
             extra: { kind: "alarm", alarmId: a.id },
             sound: "default",
             schedule: { at: nextTime(a) },
@@ -709,8 +709,8 @@ function App() {
                 Sound<span className="sound-label">Radar</span>
               </label>
               <p className="alarm-mode-note">
-                To stop this alarm, make your case to Duvet or agree to go back
-                to bed. Emergency stop is always available.
+                Duvet will try to talk you back to sleep. Tell it your final
+                decision to stop the alarm. Emergency stop is always available.
               </p>
             </div>
             {alarms.some((a) => a.id === draft.id) && (
