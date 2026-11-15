@@ -5,11 +5,11 @@
 - Artifact: a mobile alarm app with conversational onboarding, an AI alarm negotiation, and a small personal activity ledger.
 - Audience: students and working people using a deliberately unproductive comedy app. Primary action: set an alarm, then resolve it through a short text conversation.
 - Positioning: playful consumer utility. The user's original reference is the iPhone Clock app; keep its dark canvas, clear time numerals, switches, and bottom tabs.
-- Adjectives: familiar (platform controls), sleepy (low-glare dark surfaces), mischievous (the sound stack and Duvet's copy), legible (large time and readable chat).
+- Adjectives: familiar (platform controls), sleepy (low-glare dark surfaces), mischievous (the sound stack and unnamed voice), legible (large time and readable chat).
 - Essence: familiar, sleepy, mischievous.
 - Proposition: a normal alarm with a pillow arguing the other side.
 - Mode: deliberately dark in both OS themes. No unrequested light-mode redesign.
-- Constraints: React, Capacitor, plain CSS, small screens, keyboard operation, PG-13 character, notifications subject to iOS rules.
+- Constraints: React, Capacitor, plain CSS, small screens, keyboard operation, safe conversational replies, notifications subject to iOS rules.
 - References: iPhone Clock for alarm controls; the familiar message stream for conversation. Mobbin's native alarm/setup flows are a useful future reference, not a component dependency. Verify licenses before importing any third-party component.
 
 ## Aesthetic commitment
@@ -76,18 +76,3 @@ Self-audit: 8/10 for prototype fit. Remaining limitations: fixed dark appearance
 ## Changelog
 
 2026-11-15: established a durable design system and applied both requested skills to onboarding, negotiation, tasks, and metrics.
-
-Voice mode uses a warm amber orb consistent with Duvet's existing palette. Slow internal movement indicates readiness; a breathing outline indicates listening; faster internal movement indicates speaking. State labels provide the same information without animation. Reduced motion disables orb animation. Tap interrupts or submits; ending voice is always available.
-
-## Snooze Department redesign — 2026-11-15
-
-Approved direction: a late-night control room whose job is keeping you in bed. This supersedes the earlier wide-layout and transcript-first guidance above; existing clock behavior, font assets, dark appearance and PG-13 boundaries remain.
-
-- Primary object: next enabled alarm, using oversized Barlow Condensed tabular numerals on a graphite panel with an amber top rule. Primary action: the solid amber Add Alarm control.
-- Alarm rows remain a continuous list, with an amber edge and labeled switch state when enabled. Inactive time numerals use muted steel.
-- Wide screens use alarm content plus a narrower Duvet standby panel. On mobile the alarm schedule stays first and the companion becomes a compact secondary practice entry.
-- Palette: graphite #191A1B, chalk #F4F1E9, amber #FFAA52. Muted text is #AAAEB2 to retain readable contrast. Updated shared token values and layout rules live in src/snooze.css, loaded after the existing styles.
-- Voice entry precedes the transcript. Active voice mode centers the orb, puts state labels and interruption controls with it, and keeps transcript space secondary. Emergency stop and mute stay available.
-- Motion: short control compression, enabled-row color transitions, a subtle entrance, and the existing voice-state orb. Reduced motion disables animation.
-- No generated images, additional fonts, UI libraries or business logic dependencies.
-- Independent screenshot review: 8/10. Retained alarm-first hierarchy; addressed mobile practice-entry clipping, profile truncation and competing primary-action emphasis. Real microphone and physical-device accessibility remain outside this visual redesign's verification.
