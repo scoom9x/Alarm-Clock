@@ -27,3 +27,9 @@ Not verified: full axe scan, VoiceOver, Safari, emulated reduced-motion behavior
 - Enabled CapacitorHttp native fetch transport and allowed local networking for the localhost development backend; production still requires a reachable HTTPS backend.
 - Simulator build uses VITE_AI_BASE_URL=http://localhost:5173, also saved in ignored local environment for subsequent local builds. Server-only provider keys remain unchanged.
 - Confirmed an actual simulator onboarding request returned “Live Gemini reply” and advanced from question 1 to question 2. Xcode build and TypeScript checks passed.
+
+## Android APK
+- Added official Capacitor Android 8 project. Build succeeded using Android Studio Java 21 and Android SDK 36; signed debug APK at android/app/build/outputs/apk/debug/app-debug.apk, copy /private/tmp/Alarm-Clock.apk (4.2 MB).
+- apksigner verified APK v2 signature. Client-asset scan found no active Gemini or ElevenLabs keys.
+- APK API base is http://10.1.62.124:5173 for same-Wi-Fi demo; backend health reachable from laptop. Debug-only HTTP rule is scoped to this host. Production requires HTTPS hosting.
+- Microphone and exact-alarm permissions declared. No phone connected through ADB; installation, microphone and notification behavior on the physical phone remain unverified.

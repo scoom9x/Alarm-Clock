@@ -60,3 +60,8 @@ A browser must stay open to ring alarms. The native notification budget allows u
 Profiles, tasks, and debate outcomes remain in local storage. Profile data and chat text are sent to Google only when requesting AI replies. Voice recordings are sent to ElevenLabs only when voice transcription is used. The Node API does not log or retain chats or recordings. Avoid entering private or sensitive details.
 
 The SvaraNova `frontend-ui` skill was installed and used for the React/plain-CSS design, shared tokens, semantic controls, visible labels, keyboard behavior, and responsive browser checks. See [SvaraNova/skills](https://github.com/SvaraNova/skills).
+
+### Android APK (local phone demo)
+The Android project is in `android/`. Build web assets with `VITE_AI_BASE_URL=http://<laptop-wifi-ip>:5173 npm run build`, run `npx cap sync android`, then `cd android && ./gradlew assembleDebug` using Java 21 and an Android SDK. The installable debug APK is `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+The current demo uses `http://10.1.62.124:5173`. Keep `npm run dev` running and put the phone on the same Wi-Fi. The debug-only network security rule allows HTTP to that address; update it if the laptop address changes. Release builds should use a deployed HTTPS backend. Keys remain on the server, never inside the APK. Android microphone and exact-alarm permissions are declared; notification/microphone prompts must be granted on the phone.
