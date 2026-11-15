@@ -61,3 +61,10 @@ Removed personality-selection questions and wake-up-justification prompts. Onboa
 - Live synthesis produced a 74,439-byte MP3. Live Scribe transcription returned: “Your pillow has an excellent proposal. Five more minutes. Stay in bed”.
 - Reloaded Vite; running localhost:5173 `/api/voice/status` reports configured=true.
 - Microphone capture and a full human voice conversation still require testing with a person; automated live check used synthesized audio for transcription.
+
+## Continuous voice and orb
+- Added single-owner playback, request cancellation and generation checks so interrupted or stale synthesis cannot start later. Ending voice cancels requests, stops tracks, closes audio monitoring and revokes audio URLs.
+- Voice mode pauses the siren throughout the session. Spoken replies transition to microphone listening; sustained speech followed by 1.3 seconds of silence submits a turn, with a 30-second recording cap. Orb tap interrupts speech or submits the current recording.
+- Warm animated orb has ready/listening/thinking/speaking states and reduced-motion support. Same-origin tabs coordinate voice ownership.
+- Removed onboarding question context from alarm requests to prevent voice replies asking setup questions.
+- Build, iOS sync and 27 tests pass. Chrome confirmed orb rendering and the siren-paused state; automatic microphone flow was waiting on browser permission and was not verified end-to-end.

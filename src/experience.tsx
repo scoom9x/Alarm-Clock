@@ -523,7 +523,9 @@ export function AlarmConversation({
           <span>
             {outcome
               ? "Negotiation complete"
-              : muted
+              : voiceActive
+                ? "Voice conversation · siren paused"
+                : muted
                 ? "Sound muted. Debate still on."
                 : "Your alarm is ringing"}
           </span>
@@ -583,7 +585,7 @@ export function AlarmConversation({
               <div key={name}>
                 <span>{String(i + 1).padStart(2, "0")}</span>
                 <strong>{name}</strong>
-                <span>{outcome ? "Stopped" : muted ? "Muted" : "Playing"}</span>
+                <span>{outcome ? "Stopped" : voiceActive ? "Paused for voice" : muted ? "Muted" : "Playing"}</span>
               </div>
             ))}
         </div>

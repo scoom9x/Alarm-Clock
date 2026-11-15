@@ -1285,3 +1285,19 @@ button:disabled {
 .voice-controls button { min-height: calc(var(--spacing) * 11); padding: calc(var(--spacing) * 3); border: calc(var(--spacing) * 0.25) solid var(--duvet-border-strong); border-radius: calc(var(--spacing) * 2); color: inherit; background: var(--duvet-surface); font: inherit; cursor: pointer; }
 .voice-controls button:disabled { opacity: 0.5; cursor: wait; }
 .voice-controls p { flex-basis: 100%; margin: 0; }
+
+.voice-controls { flex-direction: column; align-items: center; }
+.voice-stage { display: grid; justify-items: center; gap: calc(var(--spacing) * 3); padding: calc(var(--spacing) * 8) 0; width: 100%; }
+.voice-controls .voice-orb { position: relative; overflow: hidden; width: calc(var(--spacing) * 36); height: calc(var(--spacing) * 36); border-radius: 50%; border: 0; background: var(--duvet-accent); box-shadow: 0 0 calc(var(--spacing) * 12) var(--duvet-glow); isolation: isolate; }
+.voice-orb span { position: absolute; inset: -25%; border-radius: 44%; background: var(--duvet-warm-fg); opacity: .65; animation: voice-drift 8s linear infinite; }
+.voice-orb span:nth-child(2) { inset: 15% -45% -45%; background: var(--duvet-warm-border); animation-duration: 6s; animation-direction: reverse; }
+.voice-orb span:nth-child(3) { inset: -45% -20% 40%; background: var(--duvet-user-fg); animation-duration: 10s; }
+.voice-stage[data-phase="listening"] .voice-orb { animation: voice-breathe 1.8s ease-in-out infinite; }
+.voice-stage[data-phase="speaking"] .voice-orb span { animation-duration: 2s; }
+.voice-stage[data-phase="thinking"] .voice-orb { animation: voice-breathe 3s ease-in-out infinite; }
+.voice-stage p { color: var(--duvet-muted); font-size: var(--duvet-text-13); text-align: center; }
+.voice-controls .voice-end { border-radius: calc(var(--spacing) * 8); padding-inline: calc(var(--spacing) * 6); }
+.voice-notice { color: var(--duvet-warm-fg); text-align: center; }
+@keyframes voice-drift { to { transform: rotate(360deg); } }
+@keyframes voice-breathe { 50% { transform: scale(.93); } }
+@media (prefers-reduced-motion: reduce) { .voice-orb, .voice-orb span { animation: none !important; } }

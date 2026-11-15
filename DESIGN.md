@@ -76,3 +76,5 @@ Self-audit: 8/10 for prototype fit. Remaining limitations: fixed dark appearance
 ## Changelog
 
 2026-11-15: established a durable design system and applied both requested skills to onboarding, negotiation, tasks, and metrics.
+
+Voice mode uses a warm amber orb consistent with Duvet's existing palette. Slow internal movement indicates readiness; a breathing outline indicates listening; faster internal movement indicates speaking. State labels provide the same information without animation. Reduced motion disables orb animation. Tap interrupts or submits; ending voice is always available.

@@ -421,3 +421,8 @@ test("ordinary responsibilities invite rest instead of ending the alarm or deman
   assert.ok(!result.message.includes("?"));
   assert.doesNotMatch(result.message, /make.*case|why.*get up|worth.*wak/i);
 });
+
+test('alarm input never carries a default onboarding question', () => {
+  assert.equal(validateInput({mode:'alarm',messages:[],currentQuestion:'What is your name?'}).currentQuestion,'');
+  assert.equal(validateInput({mode:'onboarding',messages:[],currentQuestion:'What is your name?'}).currentQuestion,'What is your name?');
+});
