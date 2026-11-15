@@ -9,6 +9,7 @@ import {
   ChevronRight,
   BedDouble,
   Sun,
+  Moon,
   X,
   Minus,
   BarChart3,
@@ -30,6 +31,7 @@ import {
   stored,
   type Profile,
 } from "./experience";
+import "./snooze.css";
 type Alarm = {
   id: number;
   time: string;
@@ -346,7 +348,7 @@ function App() {
       <header>
         <div className="brand">
           <Clock3 size={21} />
-          <span>Alarm Clock</span>
+          <span>Alarm Clock<small>SNOOZE DEPARTMENT</small></span>
         </div>
         <span className="date">
           {now.toLocaleDateString("en-US", {
@@ -355,15 +357,15 @@ function App() {
             day: "numeric",
           })}
         </span>
-        <button className="profile-button" onClick={() => setEditProfile(true)}>
+        <button className="profile-button" aria-label="Edit Duvet profile" onClick={() => setEditProfile(true)}>
           <Sparkles size={13} />
           <span>
-            {profile.name} · {profile.tone}
+            Duvet profile
           </span>
         </button>
         <span className="live-dot" />{" "}
       </header>
-      <main id="main" tabIndex={-1}>
+      <main id="main" className={tab === "Alarm" ? "alarm-home" : ""} tabIndex={-1}>
         <div className="toolbar">
           {tab === "Alarm" && (
             <button
@@ -396,19 +398,13 @@ function App() {
             }}
           />
         ) : tab === "Alarm" ? (
-          <>
-            <button className="demo-banner" onClick={demo}>
-              <BedDouble size={27} />
-              <div>
-                <strong>Your bed has a counteroffer.</strong>
-                <span>
-                  Meet Duvet, your {profile.tone.toLowerCase()} unproductivity
-                  sidekick.
-                </span>
+          <div className="alarm-workspace">
+            <section className="alarm-primary" aria-label="Alarm schedule">
+              <div className="next-display">
+                <div className="console-label"><span className="status-light" />{active ? "NEXT WAKE-UP ATTEMPT" : "OFF DUTY"}</div>
+                <div className="next-display-time">{active ? timeParts(active.time).time : "—:—"}<span>{active ? timeParts(active.time).period : ""}</span></div>
+                <div className="next-display-meta"><strong>{active?.label || "Nothing scheduled"}</strong><span>{active ? `${Math.floor(duration / 60)}h ${duration % 60}m from now` : "Set an alarm. Give Duvet a challenge."}</span></div>
               </div>
-              <small>TRY AN ALARM</small>
-              <ChevronRight size={18} />
-            </button>
             <div className="section-heading">
               <h2>
                 Your alarms <span>{alarms.length}</span>
@@ -485,6 +481,23 @@ function App() {
                 </div>
               )}
             </div>
+            </section>
+            <aside className="duvet-station" aria-label="Duvet companion">
+              <span className="console-label">YOUR MORNING OPPOSITION</span>
+              <div className="station-emblem"><Moon size={48} /></div>
+              <h2>Duvet is on standby.</h2>
+              <p>You've got plans.<br />Your pillow has other ideas.</p>
+            <button className="demo-banner" onClick={demo}>
+              <BedDouble size={27} />
+              <div>
+                <strong>Talk to Duvet</strong>
+                <span>
+                  A practice round. No alarm required.
+                </span>
+              </div>
+              <small>TRY AN ALARM</small>
+              <ChevronRight size={18} />
+            </button>
             <div className="next-alarm">
               <span className="next-symbol">
                 <AlarmClock size={19} />
@@ -502,10 +515,11 @@ function App() {
                 </span>
               </div>
             </div>
+            </aside>
             <p className="footnote">
               An alarm with questionable intentions. Strictly PG-13.
             </p>
-          </>
+          </div>
         ) : tab === "World Clock" ? (
           <div className="world-list">
             {["America/Toronto", "Europe/London", "Asia/Tokyo"].map((zone) => (
@@ -705,9 +719,9 @@ function App() {
                   </button>
                 ))}
               </div>
-              <label>
-                Sound<span className="sound-label">Radar</span>
-              </label>
+              <div className="fixed-sound">
+                Alarm sound<span>Monster siren · fixed</span>
+              </div>
               <p className="alarm-mode-note">
                 Duvet will try to talk you back to sleep. Tell it your final
                 decision to stop the alarm. Emergency stop is always available.

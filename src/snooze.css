@@ -1,0 +1,169 @@
+/* Snooze Department — one control language across the clock and Duvet. */
+:root {
+  --duvet-bg: #191a1b; --duvet-surface: #212224; --duvet-raised: #2b2c2e;
+  --duvet-fg: #f4f1e9; --duvet-muted: #aaaeb2; --duvet-accent: #ffaa52;
+  --duvet-accent-fg: #24180d; --duvet-border: #3b3d3f; --duvet-border-strong: #858b90;
+  --duvet-warm-surface: #30271e; --duvet-warm-border: #80603d; --duvet-warm-fg: #ffd09b;
+  --duvet-input: #191a1b; --duvet-user-surface: #443221; --duvet-user-fg: #ffe0bb;
+  --console-radius: 12px; --console-width: 1120px; --console-motion: 180ms;
+  background: var(--duvet-bg); color: var(--duvet-fg); font-family: var(--font-body);
+}
+body { background: var(--duvet-bg); }
+.app { max-width: var(--console-width); padding: 0 36px; }
+.app > header { height: 80px; border-color: var(--duvet-border); gap: 20px; }
+.brand { font-size: 18px; }
+.brand > span { display: grid; gap: 3px; }
+.brand small { font-size: 9px; letter-spacing: .17em; color: var(--duvet-muted); font-weight: 500; }
+.brand svg { color: var(--duvet-accent); }
+.date { color: var(--duvet-muted); }
+.profile-button { background: transparent; border-color: var(--duvet-border); color: var(--duvet-fg); }
+.live-dot { display: none; }
+.app > main { max-width: none; padding-bottom: 120px; }
+.app > main:not(.alarm-home) { max-width: 800px; }
+.toolbar { padding-top: 24px; height: 68px; }
+.text-button { color: var(--duvet-accent); min-height: 44px; }
+.add-button { width: 48px; height: 48px; border-radius: 12px; background: var(--duvet-accent); color: var(--duvet-accent-fg); }
+.title-row { margin: 0 0 26px; }
+.title-row h1 { font-family: var(--font-display); font-size: 48px; font-weight: 600; letter-spacing: -.01em; }
+.alarm-home .toolbar { position: relative; z-index: 1; float: right; gap: 20px; padding-top: 0; height: 58px; }
+.alarm-home .title-row { padding-top: 8px; }
+.alarm-workspace { clear: both; display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr); gap: 32px; align-items: start; }
+.next-display { border-top: 2px solid var(--duvet-accent); padding: 24px 28px; background: var(--duvet-surface); border-radius: 0 0 var(--console-radius) var(--console-radius); }
+.console-label { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .12em; font-weight: 600; color: var(--duvet-muted); }
+.status-light { width: 6px; height: 6px; border-radius: 50%; background: var(--duvet-accent); }
+.next-display-time { font-family: var(--font-display); font-weight: 600; font-variant-numeric: tabular-nums; font-size: clamp(88px, 8vw, 120px); letter-spacing: -.02em; line-height: 1.13; }
+.next-display-time > span { font-family: var(--font-body); font-size: 20px; color: var(--duvet-muted); margin-left: 12px; font-weight: 400; letter-spacing: 0; }
+.next-display-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; }
+.next-display-meta > span { color: var(--duvet-muted); }
+.section-heading { margin-top: 30px; margin-bottom: 0; min-height: 36px; }
+.section-heading h2 { font-size: 13px; font-weight: 500; }
+.section-heading > span { font-size: 10px; color: var(--duvet-muted); letter-spacing: .04em; }
+.alarm-row { min-height: 106px; padding: 14px 0 14px 18px; border-bottom: 1px solid var(--duvet-border); border-left: 2px solid transparent; transition: border-color var(--console-motion), background var(--console-motion); }
+.alarm-row.enabled { border-left-color: var(--duvet-accent); }
+.alarm-time { font-family: var(--font-display); font-size: 52px; font-weight: 500; line-height: 1.05; color: var(--duvet-muted); letter-spacing: -.01em; }
+.alarm-row.enabled .alarm-time { color: var(--duvet-fg); }
+.alarm-time span { font-family: var(--font-body); font-size: 15px; margin-left: 8px; }
+.alarm-label { color: var(--duvet-muted); font-size: 13px; margin-top: 5px; }
+.alarm-row.enabled .alarm-label { color: var(--duvet-fg); }
+.toggle { background: var(--duvet-border); }
+.toggle.on { background: var(--duvet-accent); }
+.toggle.on span { background: var(--duvet-accent-fg); }
+.duvet-station { padding: 26px; border: 1px solid var(--duvet-border); border-radius: var(--console-radius); }
+.station-emblem { width: 100px; height: 100px; display: grid; place-items: center; margin: 30px auto; border-radius: 50%; background: var(--duvet-warm-surface); color: var(--duvet-accent); border: 1px solid var(--duvet-warm-border); }
+.duvet-station h2 { font-family: var(--font-display); font-weight: 600; font-size: 32px; margin: 0 0 10px; }
+.duvet-station > p { color: var(--duvet-muted); font-size: 14px; line-height: 1.7; margin: 0 0 24px; }
+.duvet-station .demo-banner { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px; margin: 0; background: var(--duvet-accent); color: var(--duvet-accent-fg); border: 0; border-radius: 8px; width: 100%; text-align: left; }
+.duvet-station .demo-banner > svg:first-child { display: none; }
+.duvet-station .demo-banner > div { flex: 1; }
+.duvet-station .demo-banner strong { font-size: 15px; }
+.duvet-station .demo-banner span { display: block; color: var(--duvet-accent-fg); font-size: 12px; margin-top: 4px; }
+.duvet-station .demo-banner small { display: none; }
+.duvet-station .next-alarm { margin: 24px 0 0; padding: 20px 0 0; border: 0; border-top: 1px solid var(--duvet-border); background: none; gap: 12px; }
+.next-alarm p { color: var(--duvet-fg); font-size: 13px; }
+.next-alarm div > span { color: var(--duvet-muted); font-size: 12px; }
+.next-symbol { color: var(--duvet-accent); background: none; }
+.alarm-workspace > .footnote { grid-column: 1 / -1; margin: 0; color: var(--duvet-muted); font-size: 11px; }
+.app > nav { height: calc(80px + env(safe-area-inset-bottom)); gap: 44px; background: var(--duvet-bg); border-color: var(--duvet-border); }
+.app > nav button { min-width: 84px; font-size: 11px; color: var(--duvet-muted); }
+.app > nav .selected { color: var(--duvet-accent); }
+.app > nav .selected::after { background: var(--duvet-accent); }
+button { transition: transform var(--console-motion), background var(--console-motion); }
+button:active:not(:disabled) { transform: scale(.98); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline-color: var(--duvet-accent); }
+.intro-screen, .alarm-conversation { background: var(--duvet-bg); }
+.intro-shell { max-width: 1000px; gap: 0 72px; }
+.intro-top { padding: 8px 0 24px; }
+.intro-heading { padding-top: 56px; }
+.intro-heading h1 { font-size: clamp(48px, 6vw, 76px); line-height: 1.05; }
+.intro-heading p { color: var(--duvet-muted); }
+.intro-chat { margin-top: 40px; border-top: 2px solid var(--duvet-accent); }
+.duvet-avatar { border-radius: 50%; }
+.debate-shell { max-width: 960px; }
+.debate-top { border-bottom: 1px solid var(--duvet-border); padding-bottom: 18px; }
+.debate-heading { margin: 28px 0; }
+.debate-heading h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.05; }
+.ring-dashboard { padding: 18px 24px; background: var(--duvet-surface); border-radius: var(--console-radius); }
+.ring-dashboard strong { font-size: 48px; }
+.sound-stack { margin: 16px 0; }
+.debate-chat { padding: 24px; background: var(--duvet-surface); border: 1px solid var(--duvet-border); }
+.debate-chat:has(.voice-stage) { display: flex; flex-direction: column; }
+.debate-chat:has(.voice-stage) > .voice-controls { order: 1; }
+.debate-chat:has(.voice-stage) > .chat-title { order: 0; }
+.debate-chat:has(.voice-stage) > .transcript { order: 2; max-height: 160px; }
+.debate-chat:has(.voice-stage) > .composer { order: 4; }
+.debate-chat:has(.voice-stage) > .ai-notice { order: 3; }
+.voice-controls .voice-orb { width: 184px; height: 184px; }
+.voice-stage { padding: 24px 0; }
+.debate-safety { position: sticky; bottom: 0; padding: 16px 0; background: var(--duvet-bg); z-index: 2; }
+.composer { background: var(--duvet-input); }
+.day-welcome { border-top: 2px solid var(--duvet-accent); padding-top: 24px; }
+.task-section { background: var(--duvet-surface); }
+.modal { background: var(--duvet-surface); border: 1px solid var(--duvet-border); }
+.world-row, .lap-row { border-color: var(--duvet-border); }
+.alarm-workspace, .intro-chat { animation: console-enter 300ms ease-out; }
+@keyframes console-enter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@media (max-width: 760px) {
+ .app { padding: 0 20px; }
+ .app > header { height: 68px; gap: 12px; }
+ .date { display: none; }
+ .profile-button { margin-left: auto; max-width: 44%; font-size: 11px; }
+ .brand { font-size: 16px; }
+ .brand small { font-size: 8px; }
+ .alarm-workspace { grid-template-columns: minmax(0,1fr); gap: 24px; }
+ .title-row { margin-bottom: 18px; }
+ .title-row h1 { font-size: 40px; }
+ .alarm-home .title-row { padding-top: 22px; }
+ .alarm-home .toolbar { padding-top: 16px; height: 66px; }
+ .next-display { padding: 20px; }
+ .next-display-time { font-size: 96px; }
+ .next-display-meta { font-size: 12px; }
+ .alarm-row { min-height: 94px; padding-block: 12px; }
+ .alarm-time { font-size: 46px; }
+ .duvet-station { display: grid; grid-template-columns: 1fr; padding: 20px; }
+ .duvet-station > .console-label, .station-emblem, .duvet-station h2, .duvet-station > p { display: none; }
+ .duvet-station .next-alarm { margin-top: 16px; padding-top: 16px; }
+ .app > nav { gap: 0; justify-content: space-around; height: calc(74px + env(safe-area-inset-bottom)); }
+ .app > nav button { min-width: 0; flex: 1; font-size: 10px; }
+ .app > main { padding-bottom: 110px; }
+ .intro-screen, .alarm-conversation { padding: 20px 18px; }
+ .intro-heading { padding-top: 28px; }
+ .intro-chat { margin-top: 28px; }
+ .intro-heading h1 { font-size: 48px; }
+ .debate-heading { margin: 24px 0; }
+ .debate-chat { padding: 16px; }
+ .ring-dashboard { padding: 16px; }
+ .voice-controls .voice-orb { width: 148px; height: 148px; }
+ .debate-safety { flex-wrap: wrap; gap: 8px; }
+ .section-heading > span { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+/* Review refinements: optional practice stays secondary; voice entry stays visible. */
+.duvet-station .demo-banner { background: var(--duvet-warm-surface); color: var(--duvet-warm-fg); border: 1px solid var(--duvet-warm-border); }
+.duvet-station .demo-banner span { color: var(--duvet-muted); }
+.debate-heading { padding: 0; }
+.debate-chat { display: flex; flex-direction: column; }
+.debate-chat > .chat-title { order: 0; }
+.debate-chat > .voice-controls { order: 1; align-self: stretch; }
+.debate-chat > .transcript { order: 2; }
+.debate-chat > .ai-notice { order: 3; }
+.debate-chat > .composer, .debate-chat > .primary-wide { order: 4; }
+.voice-controls > button:not(.voice-end) { width: 100%; color: var(--duvet-accent-fg); background: var(--duvet-accent); border-color: transparent; }
+.days { gap: 2px; justify-content: space-between; }
+.days button { min-width: 40px; min-height: 44px; width: auto; flex: 1; border-radius: 8px; font-size: 12px; }
+@media (max-width:760px) {
+ .next-display { padding: 16px; }
+ .next-display-time { font-size: 88px; }
+ .alarm-row { min-height: 88px; padding-block: 10px; }
+ .section-heading { margin-top: 24px; }
+ .alarm-workspace { gap: 18px; }
+ .duvet-station { padding: 0; border: 0; }
+ .duvet-station .demo-banner { padding: 13px 16px; }
+ .duvet-station .next-alarm { display: none; }
+ .profile-button { max-width: 50%; }
+ .debate-heading { margin: 22px 0; }
+ .debate-heading h1 { font-size: 36px; }
+ .days button { min-width: 0; }
+}
+.fixed-sound { display: flex; justify-content: space-between; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--duvet-border); font-size: 14px; }
+.fixed-sound > span { color: var(--duvet-muted); text-align: right; }
+@media(max-width:760px) { .profile-button span { max-width: none; overflow: visible; text-overflow: clip; } .profile-button { flex-shrink: 0; } }

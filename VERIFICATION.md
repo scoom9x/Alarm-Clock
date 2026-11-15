@@ -68,3 +68,11 @@ Removed personality-selection questions and wake-up-justification prompts. Onboa
 - Warm animated orb has ready/listening/thinking/speaking states and reduced-motion support. Same-origin tabs coordinate voice ownership.
 - Removed onboarding question context from alarm requests to prevent voice replies asking setup questions.
 - Build, iOS sync and 27 tests pass. Chrome confirmed orb rendering and the siren-paused state; automatic microphone flow was waiting on browser permission and was not verified end-to-end.
+
+## Oil-ui Snooze Department redesign
+- User approved direct implementation of graphite/amber control-room direction.
+- TypeScript check (`npx tsc --noEmit`) passed. No business logic changes; production build and full tests intentionally not repeated for this UI-only pass per oil-ui workflow.
+- Chrome baseline and current screenshots: local .oil-ui/redesign/shots/. Mobile 390x844 and normal desktop inspected, plus mobile editor and ringing screen.
+- Independent visual reviewer /root/visual_review scored 8/10; findings addressed with a clearer profile label, secondary practice button treatment, mobile density refinements and higher voice-entry placement.
+- Independent UX walkthrough /root/ux_review: created temporary alarm, set Monday repeat, saved, confirmed enabled listing, deleted temporary item; original three alarms restored. Clarified static sound row as “Monster siren · fixed” based on review.
+- Final Chrome captures: mobile-final.png and desktop-final.png. Root reloaded saved alarm list and navigated World Clock → Timers → Alarm successfully. No keyboard zoom conclusion: automation timed out during enlarged-layout check; normal zoom restored. Physical keyboard, 200% zoom and device safe-area testing remain unverified.
