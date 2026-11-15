@@ -24,6 +24,11 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Talk to Duvet to respond to your alarm using your voice.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

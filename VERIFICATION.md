@@ -21,3 +21,9 @@ Not verified: full axe scan, VoiceOver, Safari, emulated reduced-motion behavior
 - npm ci completed; 27 tests, production build and Capacitor iOS sync passed. Restarted development server on localhost:5173.
 - Live Gemini returned a conversation reply; live ElevenLabs returned HTTP 200 with 38,913 bytes of speech. Running health endpoints report Gemini and voice configured.
 - Active-key scan found no credentials in tracked files or built client assets. Physical-device alarm delivery and microphone interaction were not retested in this replacement.
+
+## iOS simulator launch and AI connection
+- Built and launched com.lenny.alarmclock on iPhone 17 Pro / iOS 26.1 simulator.
+- Enabled CapacitorHttp native fetch transport and allowed local networking for the localhost development backend; production still requires a reachable HTTPS backend.
+- Simulator build uses VITE_AI_BASE_URL=http://localhost:5173, also saved in ignored local environment for subsequent local builds. Server-only provider keys remain unchanged.
+- Confirmed an actual simulator onboarding request returned “Live Gemini reply” and advanced from question 1 to question 2. Xcode build and TypeScript checks passed.
