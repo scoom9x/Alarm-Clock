@@ -21,3 +21,9 @@ Not verified: full axe scan, VoiceOver, Safari, emulated reduced-motion behavior
 - Live requests confirmed that the original Flash model hit its 20-request free-tier daily quota. The offline character is expected under that condition; it must not be labeled as a live Gemini response.
 - Switched the default to `gemini-3.1-flash-lite`, which returned a real onboarding response using the same key. No key changes were needed.
 - Live smoke tests use one real request by default; `--all` explicitly runs five scenarios. They require `source: gemini`, so a working fallback does not create a false pass.
+
+## OpenRouter migration
+
+At the user’s request, replaced Gemini with OpenRouter’s Chat Completions API, server-side bearer authentication, strict JSON schema, and default `openrouter/free` model routing. The private environment file now contains only the OpenRouter credentials. Client source labels and error messages now identify OpenRouter. All 13 automated tests pass, including authorization, response parsing, quota errors, and insufficient credits.
+
+Live OpenRouter onboarding smoke test passed in 3.3 seconds with `source: openrouter`. Running `/api/health` confirmed `provider: openrouter` and `model: openrouter/free`. Production build and iOS asset sync passed.

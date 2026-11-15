@@ -43,7 +43,7 @@ test("missing key is labeled offline and still resolves the debate", async () =>
   assert.equal(result.source, "offline");
   assert.equal(result.outcome, "awake");
 });
-test("bad input is rejected before calling Gemini", () => {
+test("bad input is rejected before calling OpenRouter", () => {
   assert.throws(() => validateInput({ ...input, mode: "system" }));
   assert.throws(() =>
     validateInput({
@@ -66,7 +66,7 @@ test("unsafe generated language is replaced", () =>
 test("blocked API key does not expose upstream response or secret", async () => {
   const result = await reply(
     input,
-    { GEMINI_API_KEY: "private-test-key" },
+    { OPENROUTER_API_KEY: "private-test-key" },
     async () => ({ ok: false, status: 403 }),
   );
   assert.equal(result.source, "offline");
@@ -77,18 +77,18 @@ test("malformed and unsafe model output fail to safe character", async () => {
   const model = (message) => async () => ({
     ok: true,
     json: async () => ({
-      candidates: [{ content: { parts: [{ text: message }] } }],
+      choices: [{ message: { content: message } }],
     }),
   });
   const malformed = await reply(
     input,
-    { GEMINI_API_KEY: "test" },
+    { OPENROUTER_API_KEY: "test" },
     model("invalid json"),
   );
   assert.equal(malformed.source, "offline");
   const unsafe = await reply(
     input,
-    { GEMINI_API_KEY: "test" },
+    { OPENROUTER_API_KEY: "test" },
     model(JSON.stringify({ message: "You are worthless", outcome: "bed" })),
   );
   assert.equal(unsafe.source, "offline");
@@ -98,28 +98,24 @@ test("malformed and unsafe model output fail to safe character", async () => {
 test("valid structured model outcome reaches the client", async () => {
   const result = await reply(
     { ...input, messages: [{ role: "user", text: "I need to go to work." }] },
-    { GEMINI_API_KEY: "test" },
+    { OPENROUTER_API_KEY: "test" },
     async () => ({
       ok: true,
       json: async () => ({
-        candidates: [
+        choices: [
           {
-            content: {
-              parts: [
-                {
-                  text: JSON.stringify({
-                    message: "You win. Have a good morning!",
-                    outcome: "awake",
-                  }),
-                },
-              ],
+            message: {
+              content: JSON.stringify({
+                message: "You win. Have a good morning!",
+                outcome: "awake",
+              }),
             },
           },
         ],
       }),
     }),
   );
-  assert.equal(result.source, "gemini");
+  assert.equal(result.source, "openrouter");
   assert.equal(result.outcome, "awake");
 });
 
@@ -131,7 +127,7 @@ test("empty or incomplete structured replies are labeled offline", async () => {
   ]) {
     const response = await reply(
       input,
-      { GEMINI_API_KEY: "test" },
+      { OPENROUTER_API_KEY: "test" },
       async () => ({
         ok: true,
         json: async () => ({
@@ -147,34 +143,55 @@ test("empty or incomplete structured replies are labeled offline", async () => {
 });
 
 test("daily quota failures explain the reset and retain safe behavior", async () => {
-  const result = await reply(input, { GEMINI_API_KEY: "test" }, async () => ({
-    ok: false,
-    status: 429,
-    json: async () => ({
-      error: {
-        details: [
-          {
-            violations: [
-              { quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier" },
-            ],
-          },
-          {
-            "@type": "type.googleapis.com/google.rpc.RetryInfo",
-            retryDelay: "3600s",
-          },
-        ],
-      },
+  const result = await reply(
+    input,
+    { OPENROUTER_API_KEY: "test" },
+    async () => ({
+      ok: false,
+      status: 429,
+      headers: { get: () => "3600" },
+      json: async () => ({ error: { message: "Daily request limit reached" } }),
     }),
-  }));
+  );
   assert.equal(result.source, "offline");
   assert.match(result.notice, /daily quota/);
   assert.equal(result.retryAfterSeconds, 3600);
 });
 test("temporary rate limits are distinguished from daily quota", async () => {
-  const result = await reply(input, { GEMINI_API_KEY: "test" }, async () => ({
-    ok: false,
-    status: 429,
-    json: async () => ({ error: { details: [] } }),
-  }));
+  const result = await reply(
+    input,
+    { OPENROUTER_API_KEY: "test" },
+    async () => ({
+      ok: false,
+      status: 429,
+      json: async () => ({ error: { message: "Too many requests" } }),
+    }),
+  );
   assert.match(result.notice, /temporarily rate-limited/);
+});
+test("OpenRouter receives bearer authorization and strict JSON schema", async () => {
+  let request;
+  await reply(
+    input,
+    { OPENROUTER_API_KEY: "private-test-key" },
+    async (url, options) => {
+      request = { url, ...options };
+      return { ok: false, status: 503 };
+    },
+  );
+  assert.equal(request.url, "https://openrouter.ai/api/v1/chat/completions");
+  assert.equal(request.headers.Authorization, "Bearer private-test-key");
+  const body = JSON.parse(request.body);
+  assert.equal(body.model, "openrouter/free");
+  assert.equal(body.response_format.json_schema.strict, true);
+  assert.equal(body.messages[0].role, "system");
+});
+test("insufficient OpenRouter credit is reported clearly", async () => {
+  const result = await reply(
+    input,
+    { OPENROUTER_API_KEY: "test" },
+    async () => ({ ok: false, status: 402 }),
+  );
+  assert.equal(result.source, "offline");
+  assert.match(result.notice, /insufficient credits/);
 });

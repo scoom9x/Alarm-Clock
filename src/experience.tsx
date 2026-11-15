@@ -24,7 +24,7 @@ type Message = { role: "user" | "assistant"; text: string };
 type Reply = {
   message: string;
   outcome: "continue" | "awake" | "bed";
-  source: "gemini" | "offline";
+  source: "openrouter" | "offline";
   notice?: string;
 };
 export type Task = {
@@ -99,7 +99,7 @@ function localFallback(
     message,
     outcome,
     source: "offline",
-    notice: "Offline character · Gemini is unavailable.",
+    notice: "Offline character · OpenRouter is unavailable.",
   };
 }
 export async function ask(
@@ -143,7 +143,7 @@ export async function ask(
     if (
       typeof data.message !== "string" ||
       !["continue", "awake", "bed"].includes(data.outcome) ||
-      !["gemini", "offline"].includes(data.source)
+      !["openrouter", "offline"].includes(data.source)
     )
       throw new Error("Invalid reply");
     return data;
@@ -153,7 +153,7 @@ export async function ask(
       notice:
         error instanceof Error &&
         ["TimeoutError", "AbortError"].includes(error.name)
-          ? "Gemini took too long to respond. The offline character is replying; try your next message again."
+          ? "OpenRouter took too long to respond. The offline character is replying; try your next message again."
           : "Could not reach the AI server. The offline character is replying. Check your connection and try again.",
     };
   }
@@ -379,9 +379,9 @@ export function Onboarding({
           )}
         </div>
         <p className="intro-privacy">
-          Keep it light. Your profile stays on this device and is sent to Gemini
-          with your chats to personalize replies. Don’t share private details.
-          This is a comedy app; your responsibilities still matter.
+          Keep it light. Your profile stays on this device and is sent to
+          OpenRouter with your chats to personalize replies. Don’t share private
+          details. This is a comedy app; your responsibilities still matter.
         </p>
       </div>
     </main>

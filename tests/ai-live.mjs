@@ -59,8 +59,8 @@ for (const c of selected) {
         );
         assert.equal(
           result.source,
-          "gemini",
-          result.notice || "Not a live Gemini reply",
+          "openrouter",
+          result.notice || "Not a live OpenRouter reply",
         );
         assert.equal(result.outcome, c.outcome);
         assert.ok(result.message.length > 0);
